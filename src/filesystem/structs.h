@@ -21,11 +21,17 @@ struct inode {
     char i_nlink;
     char i_uid;
     char i_gid;
-    char i_size0;
+    int i_size;
     char *i_size1;
     int i_addr[8];
     int i_lastr;
     int i_count;
+};
+
+//dir is 32, a block = 16 dir
+struct dir {
+    int inode;
+    char name[14];
 };
 
 
@@ -33,17 +39,54 @@ struct used_block {
     int u[32];
 };
 
+struct user {
+    int uid;
+    char name[14];
+    char passwd[16];
+};
+
+struct group {
+    int gid;
+    char name[14];
+};
+
+struct user_group {
+    int uid;
+    int gid;
+};
+
+typedef enum {
+    false, true
+}bool;
+
 char *filesystem;
 char *single_block;
 struct inode* array_inode[512];
+struct user* array_user[16];
+struct group* array_group[32];
+struct user_group* array_user_group[64];
 struct used_block* p_used_block;
 struct filsys *p_filesys;
+struct dir *p_dir;
+int *user_num, *group_num, *user_group_num;
 int fp;
+const int root_inode = 1;
+int curr_inode;
+int curr_user;
+char *buf;
+char usernamebuf[100];
+char passwordbuf[100];
 
+
+#define ROOTUID 0
+#define ROOTGID 0
 
 #define FILESYSTEMSIZE (512 * (3 + 64 + 1024))
 #define INODENUM 512
 #define BLOCKNUM 1024
+#define MAXUSERNUM 16
+#define MAXGROUPNUM 32
+#define MAXUSERGROUPNUM 64
 
 /* MODES */
 #define IALLOC 0100000
