@@ -18,7 +18,7 @@ int get_password(char *username) {
 }
 
 bool login() {
-    int i, j, len, pos = 0, uid;
+    int i, j, len, pos = 0, uid, p;
     while(1) {
 INPUT_USER_NAME:
         puts("please input your username");
@@ -54,6 +54,13 @@ INPUT_USER_NAME:
         if(strcmp(buf, passwordbuf) == 0) {
             curr_user = uid;
             curr_inode = 0;
+            if(uid == 0) {
+                curr_inode = get_inode_from_path("/root");
+            } else {
+                strcpy(buf, "/home/");
+                strcat(buf, usernamebuf);
+                curr_inode = get_inode_from_path(buf);
+            }
             puts("login success!");
             return true;
         } else {

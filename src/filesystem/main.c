@@ -23,11 +23,11 @@ int main()
     */
 
     init();
+    //debug_show_dir(0);
 
     if(!login()) exit(0);
 
-
-
+    shell();
 
     return 0;
 }

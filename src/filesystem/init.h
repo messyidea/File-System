@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include "structs.h"
 #include "common.h"
+#include "shell.h"
 
 
 void init_data() {
@@ -46,18 +47,16 @@ void create_root_dir() {
     //p_dir->name = "..";
     strcpy(p_dir->name, "..");
 
-    //printf("sizeof .. == %d\n", strlen(".."));
-    //printf("name == %s\n", p_dir->name);
 }
 
 void add_essential_file() {
     int etc_iid, home_iid, root_iid, passwd_iid, bid, i;
     etc_iid = add_file(root_inode, "etc");
-    set_inode_dir(etc_iid, ROOTUID, ROOTGID);
+    set_inode_dir(etc_iid, root_inode, ROOTUID, ROOTGID);
     root_iid = add_file(root_inode, "root");
-    set_inode_dir(root_iid, ROOTUID, ROOTGID);
+    set_inode_dir(root_iid, root_inode, ROOTUID, ROOTGID);
     home_iid = add_file(root_inode, "home");
-    set_inode_dir(home_iid, ROOTUID, ROOTGID);
+    set_inode_dir(home_iid, root_inode, ROOTUID, ROOTGID);
 
     //init user and passwd
     passwd_iid = add_file(etc_iid, "passwd");
@@ -164,12 +163,15 @@ void init_filesystem() {
         p_used_block = (struct used_block *)(filesystem + 512*2);
 
 
+        //debug_show_dir(0);
+
         //get passwd
+        /*
         tmp = array_inode[root_inode]->i_addr[0];
         //printf("tmp == %d\n",tmp);
         get_single_block(tmp);
         p_dir = (struct dir*)(single_block + 2*(sizeof(struct dir)));
-        //printf("name == %s\n", p_dir->name);
+        printf("name == %s\n", p_dir->name);
         tmp = p_dir->inode;
         tmp = array_inode[tmp]->i_addr[0];
         get_single_block(tmp);
@@ -177,6 +179,11 @@ void init_filesystem() {
         tmp = p_dir->inode;
         //printf("name == %s\n", p_dir->name);
         //now tmp is the inode of passwd
+
+        printf("tmp == %d\n",tmp);
+        printf("from function = %d\n", get_inode_from_path("/etc/passwd"));
+        */
+        tmp = get_inode_from_path("/etc/passwd");
         tmp2 = array_inode[tmp]->i_addr[0];
         //printf("important bid2 == %d\n",tmp2);
         get_single_block(tmp2);
@@ -184,8 +191,6 @@ void init_filesystem() {
         user_num = (int*)single_block;
         group_num = (int*)(single_block + 4);
         user_group_num = (int*)(single_block + 8);
-        //printf("%d\n", *user_group_num);
-        //printf("user num = %d\n", *user_num);
         tmp2 = array_inode[tmp]->i_addr[1];
         get_single_block(tmp2);
         for(i = 0; i < MAXUSERNUM; ++i) {

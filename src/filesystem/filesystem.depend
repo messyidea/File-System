@@ -1,14 +1,14 @@
 # depslib dependency file v1.0
-1450597624 source:/home/ymc/homework/filesystem/src/filesystem/main.c
+1450614773 source:/home/ymc/homework/filesystem/src/filesystem/main.c
 	<stdio.h>
 	<stdlib.h>
 	"structs.h"
 	"init.h"
 	"login.h"
 
-1450596568 /home/ymc/homework/filesystem/src/filesystem/structs.h
+1450618979 /home/ymc/homework/filesystem/src/filesystem/structs.h
 
-1450597669 /home/ymc/homework/filesystem/src/filesystem/init.h
+1450617245 /home/ymc/homework/filesystem/src/filesystem/init.h
 	<stdio.h>
 	<stdlib.h>
 	<sys/types.h>
@@ -16,8 +16,9 @@
 	<fcntl.h>
 	"structs.h"
 	"common.h"
+	"shell.h"
 
-1450590311 /home/ymc/homework/filesystem/src/filesystem/common.h
+1450624049 /home/ymc/homework/filesystem/src/filesystem/common.h
 	"structs.h"
 	<stdio.h>
 	<stdlib.h>
@@ -25,7 +26,25 @@
 	<sys/stat.h>
 	<fcntl.h>
 
-1450597564 /home/ymc/homework/filesystem/src/filesystem/login.h
+1450616167 /home/ymc/homework/filesystem/src/filesystem/login.h
+	"structs.h"
+	<stdio.h>
+	<stdlib.h>
+	<sys/types.h>
+	<sys/stat.h>
+	<fcntl.h>
+
+1450622554 /home/ymc/homework/filesystem/src/filesystem/shell.h
+	<stdio.h>
+	<stdlib.h>
+	<sys/types.h>
+	<sys/stat.h>
+	<fcntl.h>
+	"structs.h"
+	"common.h"
+	"command.h"
+
+1450623273 /home/ymc/homework/filesystem/src/filesystem/command.h
 	"structs.h"
 	<stdio.h>
 	<stdlib.h>

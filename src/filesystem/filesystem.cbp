@@ -31,11 +31,14 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="command.h" />
 		<Unit filename="common.h" />
 		<Unit filename="init.h" />
+		<Unit filename="login.h" />
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="shell.h" />
 		<Unit filename="structs.h" />
 		<Extensions>
 			<code_completion />

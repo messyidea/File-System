@@ -70,12 +70,19 @@ struct filsys *p_filesys;
 struct dir *p_dir;
 int *user_num, *group_num, *user_group_num;
 int fp;
-const int root_inode = 1;
+const int root_inode = 0;
 int curr_inode;
 int curr_user;
 char *buf;
 char usernamebuf[100];
 char passwordbuf[100];
+char path[100][100];
+int pathtop;
+char pathbuf[1000];
+char single_pathbuf[100];
+char commandbuf[10][100];
+int command_num;
+
 
 
 #define ROOTUID 0
