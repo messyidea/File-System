@@ -68,8 +68,8 @@ INPUT_USER_NAME:
             puts("password wrong.");
             pos ++;
             if(pos == 3) {
-                    puts("tried max times, exit");
-                    return false;
+                puts("tried max times, exit");
+                return false;
             }
             goto INPUT_USER_NAME;
         }

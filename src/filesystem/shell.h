@@ -35,6 +35,7 @@ void extract_command(char* command) {
 
 void shell() {
     int i, j;
+    bool flag;
     char command[20][100];
     strcpy(command[0], "exit");
     strcpy(command[1], "mkdir");
@@ -71,11 +72,19 @@ void shell() {
         }
         switch(rst) {
             case 0: {
+                printf("user_num == %d\n", *user_num);
+                printf("fp == %d\n",fp);
+                save();
                 puts("退出");
+
                 return ;
                 break;
             }
             case 1: {
+                if(command_num == 1) {
+                    printf("mkdir: 缺少参数\n");
+                    break;
+                }
                 for(i = 1; i < command_num; ++i) {
                     if( check_path(commandbuf[i]) )
                         command_mkdir(commandbuf[i], false, curr_user, curr_user);
@@ -86,6 +95,10 @@ void shell() {
                 break;
             }
             case 2: {
+                if(command_num == 1) {
+                    printf("rmdir: 缺少参数\n");
+                    break;
+                }
                 for(i = 1; i < command_num; ++i) {
                     if( check_path(commandbuf[i]) )
                         command_rmdir(commandbuf[i]);
@@ -120,12 +133,48 @@ void shell() {
                 break;
             }
             case 5: {
+
+                if(command_num == 1) {
+                    printf("touch: 缺少参数\n");
+                    break;
+                }
+                for(i = 1; i < command_num; ++i) {
+                    if( check_path(commandbuf[i]) )
+                        command_touch(commandbuf[i], false, curr_user, curr_user);
+                    else
+                        printf("touch: 创建%s失败：路径不符合规范\n", commandbuf[i]);
+                }
+
                 break;
             }
             case 6: {
+                if(command_num == 1) {
+                    printf("rm: 缺少参数\n");
+                    break;
+                }
+                flag = false;
+                if(strcmp(commandbuf[command_num - 1], "-r") == 0) {
+                    flag = true;
+                    command_num --;
+                }
+                for(i = 1; i < command_num; ++i) {
+                    if( check_path(commandbuf[i]) )
+                        command_rm(commandbuf[i], flag);
+                    else
+                        printf("rm: rm%s失败：路径不符合规范\n", commandbuf[i]);
+                }
                 break;
             }
             case 7: {
+                if(command_num <= 2 || command_num > 4) {
+                    printf("cp: 参数错误\n");
+                    break;
+                }
+
+                if((check_path(commandbuf[1]) && check_path(commandbuf[2])) == 0) {
+                    printf("mv: 路径错误\n");
+                }
+                command_cp(commandbuf[1], commandbuf[2]);
                 break;
             }
             case 8: {

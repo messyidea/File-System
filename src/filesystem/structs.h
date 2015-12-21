@@ -100,9 +100,7 @@ int command_num;
 /* MODES */
 #define IALLOC 0100000
 #define IIMPORTANT 0200000
-#define IFMT 060000
 #define IFDIR 040000
-#define IFCHR 020000
-#define IEXEC 0100
+#define ILARG 010000
 
 #endif // STRUCTS

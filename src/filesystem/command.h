@@ -53,7 +53,7 @@ char* get_name_by_gid(int id) {
 
 char* get_mode_str(int id) {
     char str[16] = "dwrxwrxwrx";
-    if(is_dir(id)) str[0] = '-';
+    if(!is_dir(id)) str[0] = '-';
     int i, mod = array_inode[id]->i_mode;
     for(i = 0; i < 8; ++i) {
         if((mod & (1<<i)) != (1<<i)) {
@@ -153,6 +153,44 @@ int command_mkdir(char* path, bool is_important, int uid, int gid) {
     }
     iid = add_file(pid, single_pathbuf);
     set_inode_dir(iid, pid, uid, gid, is_important);
+
+    return 1;
+}
+
+int command_touch(char* path, bool is_important, int uid, int gid) {
+    int tmpid, pos = 0, pos2, pid = 0, iid;
+    int len;
+    if(path[0] == '/') { tmpid = root_inode; pos ++; }
+    else tmpid = curr_inode;
+    len = strlen(path);
+    if(path[len - 1] == '/') len --;
+    pid = -1;
+    while(pos < len) {
+        pos2 = 0;
+        while(pos < len && path[pos] != '/') {
+            single_pathbuf[pos2 ++] = path[pos++];
+        }
+        single_pathbuf[pos2] = 0;
+        pid = tmpid;
+        tmpid = find_inode_from_single_path(tmpid, single_pathbuf);
+        pos ++;
+        if(tmpid == -1 && pos < len) {
+            printf("touch:无法创建目录%s， 没有那个文件或目录\n", path);
+            return -1;
+        }
+    }
+    if(pid < 0) return -1;
+    if(find_inode_from_single_path(pid, single_pathbuf) >= 0) {
+        printf("touch:无法创建文件 '%s'： 文件已存在\n", single_pathbuf);
+        return -1;
+    }
+    printf("user = %d | pid = %d | auth = %d\n", curr_user, pid, have_authority(curr_user, pid, 'w'));
+    if(!have_authority(curr_user, pid, 'w')) {
+        printf("touch :无法创建文件 '%s'： 没有权限\n", single_pathbuf);
+        return -1;
+    }
+    iid = add_file(pid, single_pathbuf);
+    set_inode_file(iid, pid, uid, gid, is_important);
 
     return 1;
 }
@@ -300,6 +338,7 @@ char* get_singlename_use_inode(int id) {
     return get_singlepath_from_inode(pid, id);
 }
 
+//支持相对路径和绝对路径。目录自动判断等
 int command_mv(char* path1, char* path2) {
     printf("path1 = %s | path2 = %s\n", path1, path2);
 
@@ -323,7 +362,7 @@ int command_mv(char* path1, char* path2) {
                 return -1;
             }
             if(is_important(idd1)) {
-                printf("mv: 错误：%s is important", path1);
+                printf("mv: 错误：%s is important\n", path1);
                 return -1;
             }
             int tid = add_file(idd2, name);
@@ -379,7 +418,7 @@ int command_mv(char* path1, char* path2) {
             return -1;
         }
         if(is_important(idd1)) {
-            printf("mv: 错误：%s is important", path1);
+            printf("mv: 错误：%s is important\n", path1);
             return -1;
         }
         if(idd2 == array_inode[idd1]->i_pid) {
@@ -423,7 +462,7 @@ int command_mv(char* path1, char* path2) {
                 return -1;
             }
             if(is_important(idd1)) {
-                printf("mv: 错误：%s is important", path1);
+                printf("mv: 错误：%s is important\n", path1);
                 return -1;
             }
             int tid = add_file(idd2, name);
@@ -477,7 +516,7 @@ int command_mv(char* path1, char* path2) {
                 return -1;
             }
             if(is_important(idd1)) {
-                printf("mv: 错误：%s is important", path1);
+                printf("mv: 错误：%s is important\n", path1);
                 return -1;
             }
             if(idd2 == array_inode[idd1]->i_pid) {
@@ -488,7 +527,7 @@ int command_mv(char* path1, char* path2) {
             int tid = add_file(idd2, name);
             printf("tid == %d\n", tid);
             if(tid == -1) {
-                printf("mv: 错误：block空间不足 %s\n");
+                printf("mv: 错误：block空间不足\n");
                 return -1;
             }
             set_inode_unused(tid);
@@ -510,6 +549,127 @@ int command_mv(char* path1, char* path2) {
     }
 
     //if(!(have_authority(curr_user, idd1, 'r') && have_authority(curr_user, idd1, 'w') && have_authority(curr_user, iid2, 'r') && have_authority(curr_user, iid2, 'w')))
+
+}
+
+void remove_file_itself(int id) {
+    int i, j, bid;
+    int *num, *tid;
+    int blocknum;
+    blocknum = array_inode[id]->i_size;
+    if(is_inode_large(id)) {
+        //间接
+        for(i = 0; i < blocknum; ++i) {
+            bid = array_inode[id]->i_addr[i];
+            get_single_block(bid);
+            num = (int*)single_block;
+            for(j = 0; j < *num; ++j) {
+                tid = (int*)(single_block + 4*(1 + j));
+                set_block_unused(*tid);
+            }
+            set_block_unused(bid);
+        }
+    } else {
+        for(i = 0; i < blocknum; ++i) {
+            bid = array_inode[id]->i_addr[i];
+            set_block_unused(bid);
+        }
+    }
+    set_inode_unused(id);
+}
+
+
+void dfs_rm(int id) {
+    int i, j, k;
+    int num, lastnum, bid;
+    if(!is_dir(id)) {
+        //remove_dir_use_inode(array_inode[id]->i_pid, id);
+        remove_file_itself(id);
+        return;
+    } else {
+        num = array_inode[id]->i_count;
+        lastnum = num - (num-1) / 16 * 16;
+        bid = array_inode[id]->i_addr[0];
+        get_single_block(bid);
+        if(num == 1) {
+            for(i = 2; i < lastnum; ++i) {
+                p_dir = (struct dir*)(single_block + i * (sizeof(struct dir)));
+                dfs_rm(p_dir->inode);
+            }
+            remove_file_itself(id);
+        } else {
+            for(i = 2; i < 16; ++i) {
+                p_dir = (struct dir*)(single_block + i * (sizeof(struct dir)));
+                dfs_rm(p_dir->inode);
+            }
+            for(i = 1; i < num - 1; ++i) {
+                bid = array_inode[id]->i_addr[i];
+                get_single_block(bid);
+                for(j = 0; j < 16 ; ++j) {
+                    p_dir = (struct dir*)(single_block + j * (sizeof(struct dir)));
+                    dfs_rm(p_dir->inode);
+                }
+            }
+            i = num - 1;
+            bid = array_inode[id]->i_addr[i];
+            get_single_block(bid);
+            for(i = 0; i < lastnum; ++i) {
+                p_dir = (struct dir*)(single_block + i * (sizeof(struct dir)));
+                dfs_rm(p_dir->inode);
+            }
+            remove_file_itself(id);
+        }
+
+    }
+}
+
+int command_rm(char* path, bool flag) {
+    int iid;
+    if(flag) {
+        printf("do rm force\n");
+        iid = get_inode_from_path(path);
+        if(iid < 0) {
+            printf("rm: 错误：不存在 %s\n", path);
+            return -1;
+        }
+        if(!have_authority(curr_user, iid, 'w')) {
+            printf("rm: 错误: 没有权限\n");
+            return -1;
+        }
+        if(is_important(iid)) {
+            printf("rm: 错误: file is important\n");
+            return -1;
+        }
+        if(is_dir(iid)) {
+            remove_dir_use_inode(array_inode[iid]->i_pid, iid);
+            remove_file_itself(iid);
+        } else {
+            dfs_rm(iid);
+            remove_dir_use_inode(array_inode[iid]->i_pid, iid);
+        }
+    } else {
+        //only rm files
+        printf("do rm!\n");
+        iid = get_inode_from_path(path);
+        if(iid < 0) {
+            printf("rm: 错误：不存在 %s\n", path);
+            return -1;
+        }
+        if(is_dir(iid)) {
+            printf("rm: 错误: %s是目录, 请加上 -r\n", path);
+            return -1;
+        }
+        if(!have_authority(curr_user, iid, 'w')) {
+            printf("rm: 错误: 没有权限\n");
+            return -1;
+        }
+        if(is_important(iid)) {
+            printf("rm: 错误: file is important\n");
+            return -1;
+        }
+        remove_dir_use_inode(array_inode[iid]->i_pid, iid);
+        remove_file_itself(iid);
+    }
 
 }
 

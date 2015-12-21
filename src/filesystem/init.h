@@ -116,8 +116,8 @@ void add_essential_file() {
 
 void init_filesystem() {
     int i,j, tmp, tmp2;
-    fp = open("m_filesystem", O_RDWR, 0777);
-    //printf("fp == %d\n",fp);
+    fp = open("m_filesystem", O_RDWR|O_CREAT, 0777);
+    printf("fp == %d\n",fp);
     if(fp < 0) {
         puts("filesystem not existed, new and init a filesystem");
         fp = open("m_filesystem", O_RDWR|O_CREAT, 0777);
@@ -194,6 +194,7 @@ void init_filesystem() {
         get_single_block(tmp2);
 
         user_num = (int*)single_block;
+        printf("user_num == %d\n", *user_num);
         group_num = (int*)(single_block + 4);
         user_group_num = (int*)(single_block + 8);
         max_uid = (int*)(single_block + 12);
@@ -223,6 +224,7 @@ void init() {
     //filesystem init
     init_filesystem();
 }
+
 
 
 #endif // INIT_H

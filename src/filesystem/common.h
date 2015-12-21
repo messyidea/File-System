@@ -423,4 +423,17 @@ void change_dir_name(int id, int id2, char*dirname) {
     }
 }
 
+void save() {
+    lseek(fp,0,SEEK_SET);
+    write(fp, filesystem, FILESYSTEMSIZE);
+}
+
+bool is_inode_large(int id) {
+    return  (array_inode[id]->i_mode & ILARG) == ILARG;
+}
+
+void set_inode_large(int id) {
+    array_inode[id]->i_mode |= ILARG;
+}
+
 #endif
