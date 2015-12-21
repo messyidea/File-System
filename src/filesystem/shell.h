@@ -47,6 +47,8 @@ void shell() {
     strcpy(command[8], "read");
     strcpy(command[9], "write");
     strcpy(command[10], "cd");
+    strcpy(command[11], "useradd");
+    strcpy(command[12], "su");
     int rst;
     while(1) {
         //printf("currnode = %d\n", curr_inode);
@@ -61,7 +63,7 @@ void shell() {
             continue;
         }
         rst = -1;
-        for(i = 0; i < 11; ++i) {
+        for(i = 0; i < 13; ++i) {
             if(strcmp(command[i], commandbuf[0]) == 0) {
                 rst = i;
                 break;
@@ -74,18 +76,47 @@ void shell() {
                 break;
             }
             case 1: {
-                command_mkdir(commandbuf[1]);
+                for(i = 1; i < command_num; ++i) {
+                    if( check_path(commandbuf[i]) )
+                        command_mkdir(commandbuf[i], false, curr_user, curr_user);
+                    else
+                        printf("mkdir: 创建%s失败：路径不符合规范\n", commandbuf[i]);
+                }
+                //command_mkdir(commandbuf[1]);
                 break;
             }
             case 2: {
-                command_rmdir(commandbuf[1]);
+                for(i = 1; i < command_num; ++i) {
+                    if( check_path(commandbuf[i]) )
+                        command_rmdir(commandbuf[i]);
+                    else
+                        printf("rmdir: 删除%s失败：路径不符合规范\n", commandbuf[i]);
+                }
                 break;
             }
             case 3: {
+                if(command_num <= 2 || command_num > 3) {
+                    printf("mv: 参数错误\n");
+                    break;
+                }
+                if((check_path(commandbuf[1]) && check_path(commandbuf[2])) == 0) {
+                    printf("mv: 路径错误\n");
+                }
+                command_mv(commandbuf[1], commandbuf[2]);
                 break;
             }
             case 4: {
-                command_ls(curr_inode);
+                if(command_num > 2) {
+                    printf("ls: 参数错误\n");
+                    break;
+                }
+                if(command_num == 1) {
+                    command_ls(get_dirname(curr_inode));
+                    break;
+                } else {
+                    command_ls(commandbuf[1]);
+                    break;
+                }
                 break;
             }
             case 5: {
@@ -104,7 +135,36 @@ void shell() {
                 break;
             }
             case 10: {
+                if(command_num == 1 || command_num > 2) {
+                    printf("cd: 参数错误\n");
+                    break;
+                }
+                if(!check_path(commandbuf[1])) {
+                    printf("cd: 打开%s失败： 路径有误\n", commandbuf[1]);
+                    break;
+                }
                 command_cd(commandbuf[1]);
+                break;
+            }
+            case 11: {
+                if(curr_user != ROOTUID) {
+                    printf("useradd：Permission denied.\n");
+                    break;
+                }
+                if(command_num == 1 || command_num > 2) {
+                    printf("useradd：参数错误\n");
+                    break;
+                }
+                command_adduser(commandbuf[1]);
+                break;
+            }
+            case 12: {
+                if(command_num == 1 || command_num > 2) {
+                    printf("su：参数错误\n");
+                    break;
+                }
+
+                command_su(commandbuf[1]);
                 break;
             }
             default: {

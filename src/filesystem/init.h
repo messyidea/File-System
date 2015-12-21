@@ -31,7 +31,7 @@ void create_root_dir() {
     set_inode_used(root_inode);
     array_inode[root_inode]->i_uid = ROOTUID;
     array_inode[root_inode]->i_gid = ROOTGID;
-    set_inode_mode(root_inode, 0755, true);
+    set_inode_mode(root_inode, 0755, true, true);
     array_inode[root_inode]->i_size = (2-1) / 16 + 1;   //2 dir apply 1 block
     array_inode[root_inode]->i_count = 2;               //2 dir . and ..
     bid = balloc();
@@ -52,14 +52,15 @@ void create_root_dir() {
 void add_essential_file() {
     int etc_iid, home_iid, root_iid, passwd_iid, bid, i;
     etc_iid = add_file(root_inode, "etc");
-    set_inode_dir(etc_iid, root_inode, ROOTUID, ROOTGID);
+    set_inode_dir(etc_iid, root_inode, ROOTUID, ROOTGID, true);
     root_iid = add_file(root_inode, "root");
-    set_inode_dir(root_iid, root_inode, ROOTUID, ROOTGID);
+    set_inode_dir(root_iid, root_inode, ROOTUID, ROOTGID, true);
     home_iid = add_file(root_inode, "home");
-    set_inode_dir(home_iid, root_inode, ROOTUID, ROOTGID);
+    set_inode_dir(home_iid, root_inode, ROOTUID, ROOTGID, true);
 
     //init user and passwd
     passwd_iid = add_file(etc_iid, "passwd");
+    set_inode_file(passwd_iid, root_inode, ROOTUID, ROOTGID, true);
     array_inode[passwd_iid]->i_uid = ROOTUID;
     array_inode[passwd_iid]->i_gid = ROOTGID;
     array_inode[passwd_iid]->i_size = 4;
@@ -75,6 +76,10 @@ void add_essential_file() {
     *group_num = 1;
     user_group_num = (int*)(single_block+8);
     *user_group_num = 1;
+    max_uid = (int*)(single_block + 12);
+    *max_uid = 1;
+    max_gid = (int*)(single_block + 16);
+    *max_gid = 1;
 
     //the second block: user
     bid = balloc();
@@ -111,11 +116,11 @@ void add_essential_file() {
 
 void init_filesystem() {
     int i,j, tmp, tmp2;
-    fp = open("m_filesystem", O_RDWR);
+    fp = open("m_filesystem", O_RDWR, 0777);
     //printf("fp == %d\n",fp);
     if(fp < 0) {
         puts("filesystem not existed, new and init a filesystem");
-        fp = open("m_filesystem", O_RDWR|O_CREAT);
+        fp = open("m_filesystem", O_RDWR|O_CREAT, 0777);
         p_filesys = (struct filsys*)filesystem;
         p_filesys->s_isize = 512;
         p_filesys->s_fsize = 3 + 64 + 1024;
@@ -191,6 +196,8 @@ void init_filesystem() {
         user_num = (int*)single_block;
         group_num = (int*)(single_block + 4);
         user_group_num = (int*)(single_block + 8);
+        max_uid = (int*)(single_block + 12);
+        max_gid = (int*)(single_block + 16);
         tmp2 = array_inode[tmp]->i_addr[1];
         get_single_block(tmp2);
         for(i = 0; i < MAXUSERNUM; ++i) {

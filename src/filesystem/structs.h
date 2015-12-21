@@ -26,6 +26,7 @@ struct inode {
     int i_addr[8];
     int i_lastr;
     int i_count;
+    int i_pid;
 };
 
 //dir is 32, a block = 16 dir
@@ -69,6 +70,7 @@ struct used_block* p_used_block;
 struct filsys *p_filesys;
 struct dir *p_dir;
 int *user_num, *group_num, *user_group_num;
+int *max_uid, *max_gid;
 int fp;
 const int root_inode = 0;
 int curr_inode;
@@ -97,6 +99,7 @@ int command_num;
 
 /* MODES */
 #define IALLOC 0100000
+#define IIMPORTANT 0200000
 #define IFMT 060000
 #define IFDIR 040000
 #define IFCHR 020000

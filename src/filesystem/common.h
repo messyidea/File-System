@@ -78,11 +78,15 @@ bool is_inode_dir(int id) {
     return (array_inode[id]->i_mode & IFDIR) == IFDIR;
 }
 
-void set_inode_mode(int id, int mode, bool is_dir) {
+void set_inode_mode(int id, int mode, bool is_dir, bool is_important) {
+    printf("mode = %d\n", mode);
     array_inode[id]->i_mode = 0;
     if(is_dir)
         array_inode[id]->i_mode |= IFDIR;
+    if(is_important)
+        array_inode[id]->i_mode |= IIMPORTANT;
     array_inode[id]->i_mode += mode;
+    printf("quanxian == %d\n", array_inode[id]->i_mode);
 }
 
 void get_single_block(int id) {
@@ -123,11 +127,13 @@ int add_file(int id, char name[14]) {
     return -1;
 }
 
-bool set_inode_dir(int id, int pid, int uid, int gid) {
+bool set_inode_dir(int id, int pid, int uid, int gid, bool is_important) {
+    printf("uid == %d gid == %d\n", uid, gid);
     int bid;
     array_inode[id]->i_uid = uid;
     array_inode[id]->i_gid = gid;
-    set_inode_mode(id, 0755, true);
+    array_inode[id]->i_pid = pid;
+    set_inode_mode(id, 0755, true, is_important);
     array_inode[id]->i_size = (2-1) / 16 + 1;   //2 dir apply 1 block
     array_inode[id]->i_count = 2;               //2 dir . and ..
     bid = balloc();
@@ -145,6 +151,17 @@ bool set_inode_dir(int id, int pid, int uid, int gid) {
     p_dir->inode = pid;
     //p_dir->name = "..";
     strcpy(p_dir->name, "..");
+    printf("id now == %d\n", id);
+}
+
+
+bool set_inode_file(int id, int pid, int uid, int gid, bool is_important) {
+    int bid;
+    array_inode[id]->i_uid = uid;
+    array_inode[id]->i_gid = gid;
+    array_inode[id]->i_pid = pid;
+    set_inode_mode(id, 0755, false, is_important);
+    array_inode[id]->i_size = 0;
 }
 
 bool is_dir(int id) {
@@ -181,6 +198,7 @@ int find_inode_from_single_path(int id, char *path) {
 }
 
 int get_inode_from_path(char* path) {
+    if(strlen(path) == 0) return curr_inode;
     if(strcmp(path, "/") == 0) return root_inode;
     int tmpid, pos = 0, pos2;
     int len;
@@ -281,21 +299,118 @@ void remove_dir_use_inode(int pid, int id) {
     tp = (struct dir*)(single_block + (lastnum-1) * (sizeof(struct dir)));
     array_inode[pid]->i_count --;
     if(tp->inode == id) {
-        if(array_inode[pid]->i_count % 16 == 0) array_inode[pid]->i_size --;
+        if(array_inode[pid]->i_count % 16 == 0) {
+            array_inode[pid]->i_size --;
+            set_block_unused(array_inode[pid]->i_addr[array_inode[pid]->i_size + 1]);
+        }
         return ;
     }
 
     for(i = 0; i < num - 1; ++i) {
-        tmpid = array_inode[id]->i_addr[i];
+        tmpid = array_inode[pid]->i_addr[i];
         get_single_block(tmpid);
         for(j = 0;j < 16; ++j) {
             p_dir = (struct dir*)(single_block + j * (sizeof(struct dir)));
             if(p_dir->inode == id) {
                 p_dir->inode = tp->inode;
                 strcpy(p_dir->name, tp->name);
-                if(array_inode[pid]->i_count % 16 == 0) array_inode[pid]->i_size --;
+                if(array_inode[pid]->i_count % 16 == 0) {
+                    array_inode[pid]->i_size --;
+                    set_block_unused(array_inode[pid]->i_addr[array_inode[pid]->i_size + 1]);
+                }
                 return ;
             }
+        }
+    }
+    i = num - 1;
+    tmpid = array_inode[pid]->i_addr[i];
+    get_single_block(tmpid);
+    for(j = 0;j < lastnum; ++j) {
+        p_dir = (struct dir*)(single_block + j * (sizeof(struct dir)));
+        //printf("-----%d %d\n", p_dir->inode, id2);
+        if(p_dir->inode == id ) {
+            p_dir->inode = tp->inode;
+            strcpy(p_dir->name, tp->name);
+            if(array_inode[pid]->i_count % 16 == 0) {
+                array_inode[pid]->i_size --;
+                set_block_unused(array_inode[pid]->i_addr[array_inode[pid]->i_size + 1]);
+            }
+            return ;
+        }
+    }
+}
+
+void remove_empty_dir(int id) {
+    int bid = array_inode[id]->i_addr[0];
+    set_inode_unused(id);
+    set_block_unused(bid);
+}
+
+
+bool check_path(char *path) {
+    int len = strlen(path);
+    int i;
+    for(i = 0; i < len - 1; ++i) {
+        if(path[i] == '/' && path[i+1] == '/') {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool have_authority(int uid, int iid, char w) {
+    if(uid == ROOTUID) {
+        return  true;
+    }
+    int mode;
+    mode = array_inode[iid]->i_mode;
+    printf("dir mod = %d\n", mode);
+    switch(w) {
+        case 'w':
+            printf("uid = %d | %d\n", array_inode[iid]->i_uid , uid);
+            if(array_inode[iid]->i_uid != uid) {
+                return (mode & (1<<1)) == 1<<1;
+            } else {
+                return (mode & (1<<7)) == 1<<7;
+            }
+            break;
+        case 'r':
+            if(array_inode[iid]->i_uid != uid) {
+                return (mode & (1<<2)) == 1<<2;
+            } else {
+                return (mode & (1<<8)) == 1<<8;
+            }
+            break;
+        case 'x':
+            if(array_inode[iid]->i_uid != uid) {
+                return (mode & (1<<0)) == 1<<0;
+            } else {
+                return (mode & (1<<6)) == 1<<6;
+            }
+            break;
+        default:
+            return false;
+            break;
+    }
+}
+
+bool is_important(int id) {
+    return (array_inode[id]->i_mode & IIMPORTANT) == IIMPORTANT;
+}
+
+void change_dir_name(int id, int id2, char*dirname) {
+    int i, j, tmpid;
+    int lastnum, num;
+    lastnum = array_inode[id]->i_count;
+    lastnum -= (lastnum-1) / 16 * 16;
+    num = array_inode[id]->i_size;
+    //前num-1个是满的
+    for(i = 0; i < num - 1; ++i) {
+        tmpid = array_inode[id]->i_addr[i];
+        get_single_block(tmpid);
+        for(j = 0;j < 16; ++j) {
+            p_dir = (struct dir*)(single_block + j * (sizeof(struct dir)));
+            if(p_dir->inode == id2) strcpy(p_dir->name, dirname);
         }
     }
     i = num - 1;
@@ -304,12 +419,7 @@ void remove_dir_use_inode(int pid, int id) {
     for(j = 0;j < lastnum; ++j) {
         p_dir = (struct dir*)(single_block + j * (sizeof(struct dir)));
         //printf("-----%d %d\n", p_dir->inode, id2);
-        if(p_dir->inode == id ) {
-            p_dir->inode = tp->inode;
-            strcpy(p_dir->name, tp->name);
-            if(array_inode[pid]->i_count % 16 == 0) array_inode[pid]->i_size --;
-            return ;
-        }
+        if(p_dir->inode == id2 ) strcpy(p_dir->name, dirname);
     }
 }
 
