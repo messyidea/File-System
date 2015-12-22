@@ -365,6 +365,10 @@ int command_mv(char* path1, char* path2) {
                 printf("mv: 错误：%s is important\n", path1);
                 return -1;
             }
+            if(find_inode_from_single_path(idd2, name) > 0) {
+                printf("mv: 错误：存在同名文件\n");
+                return -1;
+            }
             int tid = add_file(idd2, name);
             printf("tid == %d\n", tid);
             if(tid == -1) {
@@ -463,6 +467,10 @@ int command_mv(char* path1, char* path2) {
             }
             if(is_important(idd1)) {
                 printf("mv: 错误：%s is important\n", path1);
+                return -1;
+            }
+            if(find_inode_from_single_path(idd2, name) > 0) {
+                printf("mv: 错误：存在同名文件\n");
                 return -1;
             }
             int tid = add_file(idd2, name);
@@ -753,6 +761,40 @@ void do_cp_file(int id1, int id2, char* name) {
     }
 }
 
+
+void dfs_cp(int id1, int id2) {
+    int i, j, k, bid, tid, ttid;
+    int num = array_inode[id1]->i_count;
+    int lastnum = num - (num - 1) / 16 * 16;
+    int cou = array_inode[id1]->i_size;
+    for(i = 0; i < cou; ++ i) {
+        bid = array_inode[id1]->i_addr[i];
+        get_single_block(bid);
+        k = (i == cou-1? lastnum-1:16);
+        for(j = 0; j < k; ++j) {
+            p_dir = (struct dir*)(single_block + j * (sizeof(struct dir)));
+            tid = p_dir->inode;
+            if(is_dir(tid)) {
+                ttid = add_file(id2, p_dir->name);
+                set_inode_dir(ttid, id2, curr_user, curr_user, false);
+                dfs_cp(tid, ttid);
+            } else {
+                do_cp_file(tid, id2, p_dir->name);
+            }
+        }
+    }
+}
+
+//cp 文件夹iid1 到文件夹 iid2中，文件名叫name
+int prepare_dfs_cp(int iid1, int iid2, char* name) {
+    //check size...
+
+
+    int id = add_file(iid2, name);
+    set_inode_dir(id, iid2, curr_user, curr_user, false);
+    dfs_cp(iid1, id);
+}
+
 int command_cp(char* path1, char*path2, bool flag) {
     int i, j, k;
     int iid1, iid2;
@@ -768,6 +810,40 @@ int command_cp(char* path1, char*path2, bool flag) {
     if(flag) {
         //iid1存在且是文件
         iid1 = get_inode_from_path(path1);
+        if(!have_authority(curr_user, iid1, 'r')) {
+            printf("cp: 错误: %s不可读\n", path1);
+            return -1;
+        }
+        iid2 = get_inode_from_path(path2);
+        if(iid2 < 0) {
+            iid2 = get_inode_from_path(get_pre_path(path2));
+            if(iid2 < 0) {
+                printf("cp: 错误: %s不存在\n", path2);
+                return -1;
+            }
+            if(have_authority(curr_user, iid2, 'w')) {
+                printf("cp: 错误: %s不可写\n", path2);
+                return -1;
+            }
+            //start cp dfs
+            prepare_dfs_cp(iid1, iid2, get_back_path(get_back_path(path2)));
+        } else {
+            if(!is_dir(iid2)) {
+                printf("cp: 错误: %s已存在，是文件\n", path2);
+                return -1;
+            }
+            if(have_authority(curr_user, iid2, 'w')) {
+                printf("cp: 错误: %s不可写\n", path2);
+                return -1;
+            }
+            //same name
+            if(find_inode_from_single_path(iid2, get_back_path(path1)) > 0) {
+                printf("cp: 错误: 存在同名文件\n", path2);
+                return -1;
+            }
+            //start cp dfs
+            prepare_dfs_cp(iid1, iid2, get_back_path(path1));
+        }
 
     } else {
         iid1 = get_inode_from_path(path1);
@@ -780,7 +856,7 @@ int command_cp(char* path1, char*path2, bool flag) {
             printf("cp: 错误: %s是文件夹， use -r\n", path1);
             return -1;
         }
-        if(!have_authority(curr_user, iid1, 'w')) {
+        if(!have_authority(curr_user, iid1, 'r')) {
             printf("cp: 错误: %s不可读\n", path1);
             return -1;
         }
@@ -816,6 +892,10 @@ int command_cp(char* path1, char*path2, bool flag) {
             if(is_dir(iid2)) {
                 if(!have_authority(curr_user, iid2, 'w')) {
                     printf("cp: 错误: %s不可写\n", path2);
+                    return -1;
+                }
+                if(find_inode_from_single_path(iid2, get_back_path(path1)) > 0) {
+                    printf("cp: 错误: 存在同名文件\n", path2);
                     return -1;
                 }
                 do_cp_file(iid1, iid2, get_back_path(path1));
