@@ -20,6 +20,7 @@ inline bool is_inode_used(int id) {
 }
 
 int ialloc() {
+    puts("ialloc");
     int i;
     if(p_filesys->s_ninode < 0) {
         for(i = 0; i < INODENUM; ++i) {
@@ -33,6 +34,7 @@ int ialloc() {
 
     //alloc
     set_inode_used(p_filesys->s_inode[p_filesys->s_ninode--]);
+    printf("alloc inode id ==================================== %d\n", p_filesys->s_inode[p_filesys->s_ninode + 1]);
     return p_filesys->s_inode[p_filesys->s_ninode + 1];
 }
 
@@ -58,8 +60,10 @@ bool is_block_used(int id) {
 }
 
 int balloc() {
+    printf("balloc\n");
     int i;
     if(p_filesys->s_nfree < 0) {
+        //puts("lllllllllllllllllllllllllllll");
         for(i = 0; i < BLOCKNUM; ++i) {
             if(!is_block_used(i)) {
                 p_filesys->s_free[++(p_filesys->s_nfree)] = i;
@@ -68,10 +72,13 @@ int balloc() {
         }
         if(p_filesys->s_nfree < 0) return -1;
     }
+    set_block_used(p_filesys->s_free[p_filesys->s_nfree --]);
 
     //alloc
-    set_inode_used(p_filesys->s_inode[p_filesys->s_ninode--]);
-    return p_filesys->s_inode[p_filesys->s_ninode + 1];
+    //set_inode_used(p_filesys->s_inode[p_filesys->s_ninode--]);
+    printf("balloc id ============== %d\n", p_filesys->s_free[p_filesys->s_nfree + 1]);
+
+    return p_filesys->s_free[p_filesys->s_nfree + 1];
 }
 
 bool is_inode_dir(int id) {
@@ -81,9 +88,9 @@ bool is_inode_dir(int id) {
 void set_inode_mode(int id, int mode, bool is_dir, bool is_important) {
     printf("mode = %d\n", mode);
     array_inode[id]->i_mode = 0;
-    if(is_dir)
+    if(is_dir == true)
         array_inode[id]->i_mode |= IFDIR;
-    if(is_important)
+    if(is_important == true)
         array_inode[id]->i_mode |= IIMPORTANT;
     array_inode[id]->i_mode += mode;
     printf("quanxian == %d\n", array_inode[id]->i_mode);
@@ -94,20 +101,34 @@ void get_single_block(int id) {
 }
 
 int add_file(int id, char name[14]) {
+    //printf("c == %c\n", name[0]);
+    int i, len;
+    //printf("filename == %s\n",name);
+    //printf("c == %c\n", name[0]);
     int before, after, place, iid, bid;
-    place = array_inode[id]->i_count - (array_inode[id]->i_count / 16) * 16;
+    place = array_inode[id]->i_count - ((array_inode[id]->i_count - 1) / 16) * 16;
     before = array_inode[id]->i_count ++;
     after = array_inode[id]->i_count;
     before = (before-1) / 16 + 1;
     after = (after-1) / 16 + 1;
+    char* namebuf = (char*)malloc(100);
+    strcpy(namebuf, name);
     if(before == after) {
         //do not need to balloc
+        //printf("c == %c\n", name[0]);
         get_single_block(array_inode[id]->i_addr[array_inode[id]->i_size - 1]);
         p_dir = (struct dir*)(single_block + sizeof(struct dir) * (place));
         iid = ialloc();
         p_dir->inode = iid;
+        //printf("c == %c\n", name[0]);
         //p_dir->name = name;
-        strcpy(p_dir->name, name);
+        //len = strlen(name);
+        //printf("len == %d\n", len);
+        //printf("c == %c\n", name[0]);
+        //for(i = 0; i<len;++i) p_dir->name[i] = name[i];
+        //p_dir->name[i] = 0;
+        strcpy(p_dir->name, namebuf);
+        //printf("pdir name = %s\n", p_dir->name);
         return iid;
     } else {
         if(array_inode[id]->i_size == 8) {
@@ -121,7 +142,8 @@ int add_file(int id, char name[14]) {
         iid = ialloc();
         p_dir->inode = iid;
         //p_dir->name = name;
-        strcpy(p_dir->name, name);
+        strcpy(p_dir->name, namebuf);
+        //printf("pdir name = %s\n", p_dir->name);
         return iid;
     }
     return -1;
@@ -160,8 +182,27 @@ bool set_inode_file(int id, int pid, int uid, int gid, bool is_important) {
     array_inode[id]->i_uid = uid;
     array_inode[id]->i_gid = gid;
     array_inode[id]->i_pid = pid;
+    printf("id == %d\n",id);
     set_inode_mode(id, 0755, false, is_important);
     array_inode[id]->i_size = 0;
+
+
+    /*bid = balloc();
+    if(bid == -1) {
+        puts("no more block, create dir failed");
+        return false;
+    }
+    array_inode[id]->i_addr[0] = bid;
+    get_single_block(bid);
+    p_dir = (struct dir*)(single_block);
+    p_dir->inode = id;
+    //p_dir->name = ".";
+    strcpy(p_dir->name, ".");
+    p_dir = (struct dir*)(single_block + sizeof(struct dir));
+    p_dir->inode = pid;
+    //p_dir->name = "..";
+    strcpy(p_dir->name, "..");
+    printf("id now == %d\n", id);*/
 }
 
 bool is_dir(int id) {
@@ -212,6 +253,7 @@ int get_inode_from_path(char* path) {
             single_pathbuf[pos2 ++] = path[pos++];
         }
         single_pathbuf[pos2] = 0;
+        printf("single path buf =  %s\n", single_pathbuf);
         tmpid = find_inode_from_single_path(tmpid, single_pathbuf);
         if(tmpid == -1) return -1;
         pos ++;

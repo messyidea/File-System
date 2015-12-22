@@ -18,13 +18,10 @@ struct filsys {
 
 struct inode {
     int i_mode;
-    char i_nlink;
     char i_uid;
     char i_gid;
     int i_size;
-    char *i_size1;
     int i_addr[8];
-    int i_lastr;
     int i_count;
     int i_pid;
 };

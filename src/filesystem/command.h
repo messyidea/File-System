@@ -191,7 +191,7 @@ int command_touch(char* path, bool is_important, int uid, int gid) {
     }
     iid = add_file(pid, single_pathbuf);
     set_inode_file(iid, pid, uid, gid, is_important);
-
+    //balloc();
     return 1;
 }
 
@@ -671,6 +671,162 @@ int command_rm(char* path, bool flag) {
         remove_file_itself(iid);
     }
 
+}
+
+char* get_pre_path(char* path) {
+    printf("path = %s\n",path);
+    int i, j, len;
+    char tpath[100];
+    strcpy(tpath, path);
+    len = strlen(tpath);
+    i = len - 1;
+    if(tpath[i] == '/') i --;
+    for(; tpath[i] != '/' && i >= 0; i--) ;
+    while(i < 0) i ++;
+    tpath[i] = 0;
+    if(i == 0) return "";
+    return tpath;
+}
+
+char* get_back_path(char* path) {
+    printf("222 = %s\n", path);
+    int i, j, len;
+    char tpath[100] = "", tpath2[100] = "";
+    strcpy(tpath, path);
+    len = strlen(tpath);
+    i = len - 1;
+    if(tpath[i] == '/') i --;
+    for(; tpath[i] != '/' && i >= 0; i--) ;
+    //tpath[i] = 0;
+    while(i < 0) i++;
+    if(tpath[i] == '/') i++;
+    j = 0;
+    for(; i < len; ++i) {
+        tpath2[j ++] = tpath[i];
+    }
+    tpath2[j] = 0;
+    return tpath2;
+}
+
+
+void do_cp_file(int id1, int id2, char* name) {
+    //printf("id1 quanxian222 = %d\n", array_inode[id1]->i_mode);
+    //printf("name name== %s\n", name);
+    int i, j, k, siz, bid, newblock;
+    int *num, *bid2, *num2, *bid3;
+    //char* single_block2 = (char*)(filesystem + 512*(2 + 1 + 64 + id));
+    char* single_block2;
+    //printf("id1 quanxian222 = %d\n", array_inode[id1]->i_mode);
+    int id = add_file(id2, name);
+    set_inode_file(id, id2, curr_user, curr_user, false);
+    if(is_inode_large(id1)) {
+        set_inode_large(id);
+        siz = array_inode[id1]->i_size;
+        array_inode[id]->i_size = siz;
+        for(i = 0; i < siz; ++i) {
+            bid = array_inode[id1]->i_addr[i];
+            get_single_block(bid);
+            num = (int *)single_block;
+            newblock = balloc();
+            array_inode[id]->i_addr[i] = newblock;
+            single_block2 = (char*)(filesystem + 512*(2 + 1 + 64 + newblock));
+            num2 = (int*)single_block2;
+            *num2 = *num;
+            for(j = 0; j < *num; ++j) {
+                bid2 =  (int*)(single_block + 4 * (1 + j));
+                bid3 = (int*)(single_block2 + 4 * (1 + j));
+                *bid3 = balloc();
+                memcpy((filesystem + 512*(2 + 1 + 64 + *bid3)), (filesystem + 512*(2 + 1 + 64 + *bid2)), 512);
+            }
+        }
+    } else {
+        //不是大文件
+        siz = array_inode[id1]->i_size;
+        array_inode[id]->i_size = siz;
+        for(i = 0; i < siz; ++i) {
+            bid = array_inode[id1]->i_addr[i];
+            newblock = balloc();
+            array_inode[id]->i_addr[i] = newblock;
+            memcpy((filesystem + 512*(2 + 1 + 64 + newblock)), (filesystem + 512*(2 + 1 + 64 + bid)), 512);
+        }
+        //printf("id1 quanxian222 = %d\n", array_inode[id1]->i_mode);
+    }
+}
+
+int command_cp(char* path1, char*path2, bool flag) {
+    int i, j, k;
+    int iid1, iid2;
+    int ppid = get_inode_from_path(path1);
+    if(ppid < 0) {
+        printf("cp: 错误: %s不存在\n", path1);
+        return -1;
+    }
+    //如果path1是文件的话，去掉-r的选项。
+    if(!is_dir(iid1)) {
+        flag = false;
+    }
+    if(flag) {
+        //iid1存在且是文件
+        iid1 = get_inode_from_path(path1);
+
+    } else {
+        iid1 = get_inode_from_path(path1);
+        printf("iid1 == %d\n", iid1);
+        if(iid1 < 0) {
+            printf("cp: 错误: %s不存在\n", path1);
+            return -1;
+        }
+        if(is_dir(iid1)) {
+            printf("cp: 错误: %s是文件夹， use -r\n", path1);
+            return -1;
+        }
+        if(!have_authority(curr_user, iid1, 'w')) {
+            printf("cp: 错误: %s不可读\n", path1);
+            return -1;
+        }
+        iid2 = get_inode_from_path(path2);
+        printf("iid2 == %d\n", iid2);
+        printf("path2 == = %s\n", path2);
+        printf("backpath = %s\n", get_back_path(path2));
+        if(iid2 < 0) {
+            printf("prepath = %s\n", get_pre_path(path2));
+            printf("backpath = %s\n", get_back_path(path2));
+            iid2 = get_inode_from_path(get_pre_path(path2));
+            if(iid2 < 0) {
+                printf("cp: 错误: %s不存在\n", path2);
+                return -1;
+            } else {
+                if(!is_dir(iid2)) {
+                    printf("cp: 错误: %s不存在\n", path2);
+                    return -1;
+                } else {
+                    if(!have_authority(curr_user, iid2, 'w')) {
+                        printf("cp: 错误: %s不可写\n", path2);
+                        return -1;
+                    }
+                    if(iid2 == array_inode[iid1]->i_pid && find_inode_from_single_path(iid2, get_back_path(path2)) > 0) {
+                        printf("cp: 错误: 文件已存在\n");
+                        return -1;
+                    }
+                    do_cp_file(iid1, iid2, get_back_path(path2));
+                    return 0;
+                }
+            }
+        } else {
+            if(is_dir(iid2)) {
+                if(!have_authority(curr_user, iid2, 'w')) {
+                    printf("cp: 错误: %s不可写\n", path2);
+                    return -1;
+                }
+                do_cp_file(iid1, iid2, get_back_path(path1));
+                return 0;
+            } else {
+                //iid2是文件，且已存在
+                printf("cp: 错误: %s是已存在的文件\n", path2);
+                return -1;
+            }
+        }
+    }
 }
 
 

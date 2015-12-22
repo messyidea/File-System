@@ -34,6 +34,7 @@ void extract_command(char* command) {
 }
 
 void shell() {
+    printf("start shell\n");
     int i, j;
     bool flag;
     char command[20][100];
@@ -51,6 +52,7 @@ void shell() {
     strcpy(command[11], "useradd");
     strcpy(command[12], "su");
     int rst;
+    printf("%d %d %s\n", curr_inode, curr_user, get_username());
     while(1) {
         //printf("currnode = %d\n", curr_inode);
         printf("%s:%s%c", get_username(), get_dirname(curr_inode), (curr_user == 0 ? '#' : '$'));
@@ -170,11 +172,18 @@ void shell() {
                     printf("cp: 参数错误\n");
                     break;
                 }
+                if(command_num == 4 && strcmp(commandbuf[3], "-r") != 0) {
+                    printf("cp: 参数错误\n");
+                    break;
+                }
+                flag = false;
+                if(command_num == 4 && strcmp(commandbuf[3], "-r") == 0) flag = true;
 
                 if((check_path(commandbuf[1]) && check_path(commandbuf[2])) == 0) {
-                    printf("mv: 路径错误\n");
+                    printf("cp: 路径错误\n");
+                    break;
                 }
-                command_cp(commandbuf[1], commandbuf[2]);
+                command_cp(commandbuf[1], commandbuf[2], flag);
                 break;
             }
             case 8: {

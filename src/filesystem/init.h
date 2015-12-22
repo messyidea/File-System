@@ -31,11 +31,13 @@ void create_root_dir() {
     set_inode_used(root_inode);
     array_inode[root_inode]->i_uid = ROOTUID;
     array_inode[root_inode]->i_gid = ROOTGID;
+    array_inode[root_inode]->i_pid = root_inode;
     set_inode_mode(root_inode, 0755, true, true);
     array_inode[root_inode]->i_size = (2-1) / 16 + 1;   //2 dir apply 1 block
     array_inode[root_inode]->i_count = 2;               //2 dir . and ..
     bid = balloc();
-    printf("bid = %d\n", bid);
+    //printf("balloc  bid = %d\n", bid);
+    //printf("is block used = %d\n", is_block_used(bid));
     array_inode[root_inode]->i_addr[0] = bid;
     get_single_block(bid);
     p_dir = (struct dir*)(single_block);
@@ -51,10 +53,13 @@ void create_root_dir() {
 
 void add_essential_file() {
     int etc_iid, home_iid, root_iid, passwd_iid, bid, i;
+    //puts("create etc");
     etc_iid = add_file(root_inode, "etc");
     set_inode_dir(etc_iid, root_inode, ROOTUID, ROOTGID, true);
+    //puts("create root");
     root_iid = add_file(root_inode, "root");
     set_inode_dir(root_iid, root_inode, ROOTUID, ROOTGID, true);
+    //puts("create home");
     home_iid = add_file(root_inode, "home");
     set_inode_dir(home_iid, root_inode, ROOTUID, ROOTGID, true);
 
@@ -67,7 +72,8 @@ void add_essential_file() {
 
     // the first block: user_num, group_num and user_group_num
     bid = balloc();
-    printf("import bid == %d\n", bid);
+    //printf("import bid == %d\n", bid);
+    //printf("is bid used== %d %d\n", is_block_used(bid), is_block_used(bid - 1));
     array_inode[passwd_iid]->i_addr[0] = bid;
     get_single_block(bid);
     user_num = (int*)single_block;
@@ -116,16 +122,18 @@ void add_essential_file() {
 
 void init_filesystem() {
     int i,j, tmp, tmp2;
-    fp = open("m_filesystem", O_RDWR|O_CREAT, 0777);
-    printf("fp == %d\n",fp);
+    fp = open("m_filesystem", O_RDWR);
+    //printf("fp == %d\n",fp);
     if(fp < 0) {
-        puts("filesystem not existed, new and init a filesystem");
+        //puts("filesystem not existed, new and init a filesystem");
         fp = open("m_filesystem", O_RDWR|O_CREAT, 0777);
         p_filesys = (struct filsys*)filesystem;
         p_filesys->s_isize = 512;
         p_filesys->s_fsize = 3 + 64 + 1024;
         p_filesys->s_nfree = 99;
         p_filesys->s_ninode = 99;
+        //printf("%d\n", p_filesys->s_ninode);
+        //printf("sizeof inode = %d\n",sizeof(struct inode));
         // init stack
         for(i = 0; i < 100; ++i) {
             p_filesys->s_free[i] = i;
@@ -135,7 +143,7 @@ void init_filesystem() {
         // clear inode
         for(i = 0; i < 512; ++i) {
             array_inode[i] = (struct inode*)(filesystem + 512*3 + 64*i);
-            array_inode[i]->i_mode = 0;
+            array_inode[i]->i_mode = 0;     //没有使用
         }
         // clear block
         p_used_block = (struct used_block *)(filesystem + 512*2);
@@ -150,7 +158,8 @@ void init_filesystem() {
 
         //printf("sizeof p_filesys = %d\n", sizeof(*p_filesys));
         puts("start write");
-        write(fp, filesystem, FILESYSTEMSIZE);
+        //write(fp, filesystem, FILESYSTEMSIZE);
+        save();
 
         //read(fp1, filesystem, FILESYSTEMSIZE);
         //printf("%d\n", p_filesys->s_isize);
@@ -167,7 +176,7 @@ void init_filesystem() {
         //get block
         p_used_block = (struct used_block *)(filesystem + 512*2);
 
-
+        //puts("xixi");
         //debug_show_dir(0);
 
         //get passwd
@@ -188,13 +197,16 @@ void init_filesystem() {
         printf("tmp == %d\n",tmp);
         printf("from function = %d\n", get_inode_from_path("/etc/passwd"));
         */
+
         tmp = get_inode_from_path("/etc/passwd");
+        //puts("after get inode");
+        printf("tmp == %d\n", tmp);
         tmp2 = array_inode[tmp]->i_addr[0];
         //printf("important bid2 == %d\n",tmp2);
         get_single_block(tmp2);
 
         user_num = (int*)single_block;
-        printf("user_num == %d\n", *user_num);
+        //printf("user_num == %d\n", *user_num);
         group_num = (int*)(single_block + 4);
         user_group_num = (int*)(single_block + 8);
         max_uid = (int*)(single_block + 12);
