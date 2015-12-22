@@ -146,7 +146,7 @@ int command_mkdir(char* path, bool is_important, int uid, int gid) {
         printf("mkdir:无法创建目录 '%s'： 文件已存在\n", single_pathbuf);
         return -1;
     }
-    printf("user = %d | pid = %d | auth = %d\n", curr_user, pid, have_authority(curr_user, pid, 'w'));
+    //printf("user = %d | pid = %d | auth = %d\n", curr_user, pid, have_authority(curr_user, pid, 'w'));
     if(!have_authority(curr_user, pid, 'w')) {
         printf("mkdir:无法创建目录 '%s'： 没有权限\n", single_pathbuf);
         return -1;
@@ -184,7 +184,7 @@ int command_touch(char* path, bool is_important, int uid, int gid) {
         printf("touch:无法创建文件 '%s'： 文件已存在\n", single_pathbuf);
         return -1;
     }
-    printf("user = %d | pid = %d | auth = %d\n", curr_user, pid, have_authority(curr_user, pid, 'w'));
+    //printf("user = %d | pid = %d | auth = %d\n", curr_user, pid, have_authority(curr_user, pid, 'w'));
     if(!have_authority(curr_user, pid, 'w')) {
         printf("touch :无法创建文件 '%s'： 没有权限\n", single_pathbuf);
         return -1;
@@ -204,7 +204,7 @@ int command_rmdir(char* path) {
     }
     int pid;
     int iid = get_inode_from_path(path);
-    printf("rmdir %d\n", iid);
+    //printf("rmdir %d\n", iid);
     if(iid < 0) {
         printf("rmdir: 删除%s失败：目录不存在！\n", path);
         return -1;
@@ -242,7 +242,7 @@ void adduser(char* username, char* password) {
     (*user_num) ++;
     (*group_num) ++;
     (*user_group_num) ++;
-    printf("usernum == %d\n", *user_num);
+    //printf("usernum == %d\n", *user_num);
     array_user[(*user_num) - 1]->uid = uid;
     strcpy(array_user[(*user_num) - 1]->passwd, password);
     strcpy(array_user[(*user_num) - 1]->name, username);
@@ -340,13 +340,13 @@ char* get_singlename_use_inode(int id) {
 
 //支持相对路径和绝对路径。目录自动判断等
 int command_mv(char* path1, char* path2) {
-    printf("path1 = %s | path2 = %s\n", path1, path2);
+    //printf("path1 = %s | path2 = %s\n", path1, path2);
 
 
     int idd1 = get_inode_from_path(path1);
-    printf("idd1 == %d\n", idd1);
+    //printf("idd1 == %d\n", idd1);
     int idd2 = get_inode_from_path(path2);
-    printf("idd1 == %d idd2 == %d\n", idd1, idd2);
+    //printf("idd1 == %d idd2 == %d\n", idd1, idd2);
     char name[100];
     int i, j, p, k;
     if(idd1 < 0) {
@@ -370,7 +370,7 @@ int command_mv(char* path1, char* path2) {
                 return -1;
             }
             int tid = add_file(idd2, name);
-            printf("tid == %d\n", tid);
+            //printf("tid == %d\n", tid);
             if(tid == -1) {
                 printf("mv: 错误：block空间不足 %s\n");
                 return -1;
@@ -405,14 +405,14 @@ int command_mv(char* path1, char* path2) {
         j++;
         //j - i  就是 文件名
         p = 0;
-        printf("j - i = %d - %d\n", j , i);
+        //printf("j - i = %d - %d\n", j , i);
         for(k = j; k <= i; ++k) name[p ++] = path2[k];
         name[p] = 0;
-        printf("debug name == %s\n", name);
+        //printf("debug name == %s\n", name);
         path2[j] = 0;
-        printf("path2 == %s\n", path2);
+        //printf("path2 == %s\n", path2);
         idd2 = get_inode_from_path(path2);
-        printf("idd2 == %d\n", idd2);
+        //printf("idd2 == %d\n", idd2);
         if(idd2 < 0) {
             printf("mv: 错误： 不存在 %s\n", path2);
             return -1;
@@ -431,7 +431,7 @@ int command_mv(char* path1, char* path2) {
             return 0;
         }
         int tid = add_file(idd2, name);
-        printf("tid == %d\n", tid);
+        //printf("tid == %d\n", tid);
         if(tid == -1) {
             printf("mv: 错误：block空间不足 %s\n");
             return -1;
@@ -474,7 +474,7 @@ int command_mv(char* path1, char* path2) {
                 return -1;
             }
             int tid = add_file(idd2, name);
-            printf("tid == %d\n", tid);
+            //printf("tid == %d\n", tid);
             if(tid == -1) {
                 printf("mv: 错误：block空间不足 %s\n");
                 return -1;
@@ -507,14 +507,14 @@ int command_mv(char* path1, char* path2) {
             j++;
             //j - i  就是 文件名
             p = 0;
-            printf("j - i = %d - %d\n", j , i);
+            //printf("j - i = %d - %d\n", j , i);
             for(k = j; k <= i; ++k) name[p ++] = path2[k];
             name[p] = 0;
-            printf("debug name == %s\n", name);
+            //printf("debug name == %s\n", name);
             path2[j] = 0;
-            printf("path2 == %s\n", path2);
+            //printf("path2 == %s\n", path2);
             idd2 = get_inode_from_path(path2);
-            printf("idd2 == %d\n", idd2);
+            //printf("idd2 == %d\n", idd2);
             if(idd2 < 0) {
                 printf("mv: 错误： 不存在 %s\n", path2);
                 return -1;
@@ -533,7 +533,7 @@ int command_mv(char* path1, char* path2) {
                 return 0;
             }
             int tid = add_file(idd2, name);
-            printf("tid == %d\n", tid);
+            //printf("tid == %d\n", tid);
             if(tid == -1) {
                 printf("mv: 错误：block空间不足\n");
                 return -1;
@@ -634,7 +634,7 @@ void dfs_rm(int id) {
 int command_rm(char* path, bool flag) {
     int iid;
     if(flag) {
-        printf("do rm force\n");
+        //printf("do rm force\n");
         iid = get_inode_from_path(path);
         if(iid < 0) {
             printf("rm: 错误：不存在 %s\n", path);
@@ -657,7 +657,7 @@ int command_rm(char* path, bool flag) {
         }
     } else {
         //only rm files
-        printf("do rm!\n");
+        //printf("do rm!\n");
         iid = get_inode_from_path(path);
         if(iid < 0) {
             printf("rm: 错误：不存在 %s\n", path);
@@ -682,7 +682,7 @@ int command_rm(char* path, bool flag) {
 }
 
 char* get_pre_path(char* path) {
-    printf("path = %s\n",path);
+    //printf("path = %s\n",path);
     int i, j, len;
     char tpath[100];
     strcpy(tpath, path);
@@ -697,7 +697,7 @@ char* get_pre_path(char* path) {
 }
 
 char* get_back_path(char* path) {
-    printf("222 = %s\n", path);
+    //printf("222 = %s\n", path);
     int i, j, len;
     char tpath[100] = "", tpath2[100] = "";
     strcpy(tpath, path);
@@ -773,6 +773,7 @@ void dfs_cp(int id1, int id2) {
         k = (i == cou-1? lastnum-1:16);
         for(j = 0; j < k; ++j) {
             p_dir = (struct dir*)(single_block + j * (sizeof(struct dir)));
+            if(strcmp(p_dir->name, ".") == 0 || strcmp(p_dir->name, "..") == 0) continue;
             tid = p_dir->inode;
             if(is_dir(tid)) {
                 ttid = add_file(id2, p_dir->name);
@@ -861,12 +862,12 @@ int command_cp(char* path1, char*path2, bool flag) {
             return -1;
         }
         iid2 = get_inode_from_path(path2);
-        printf("iid2 == %d\n", iid2);
-        printf("path2 == = %s\n", path2);
-        printf("backpath = %s\n", get_back_path(path2));
+        //printf("iid2 == %d\n", iid2);
+        //printf("path2 == = %s\n", path2);
+        //printf("backpath = %s\n", get_back_path(path2));
         if(iid2 < 0) {
-            printf("prepath = %s\n", get_pre_path(path2));
-            printf("backpath = %s\n", get_back_path(path2));
+            //printf("prepath = %s\n", get_pre_path(path2));
+            //printf("backpath = %s\n", get_back_path(path2));
             iid2 = get_inode_from_path(get_pre_path(path2));
             if(iid2 < 0) {
                 printf("cp: 错误: %s不存在\n", path2);
@@ -907,6 +908,163 @@ int command_cp(char* path1, char*path2, bool flag) {
             }
         }
     }
+}
+
+void do_write(int pid, char *name) {
+    //to do:large file
+    int id = add_file(pid, name);
+    if(id < 0) {
+        printf("error: 没有空间，写入失败\n");
+        return ;
+    }
+    set_inode_file(id, pid, curr_user, curr_user, false);
+    int siz = strlen(inputbuf) * 2;
+    int ii, jj, i, j;
+    ii =  (siz + 511) / 512;
+    jj = siz - siz / 512;
+    array_inode[id]->i_size = ii;
+    for(i = 0; i < ii; ++i) {
+        array_inode[id]->i_addr[i] = balloc();
+        if(array_inode[id]->i_addr[i] < 0) {
+            printf("error: 没有空间，写入失败\n");
+            return ;
+        }
+        get_single_block(array_inode[id]->i_addr[i]);
+        memcpy(single_block, inputbuf + i * 512, 512);
+    }
+}
+
+void do_appand(int id) {
+    int siz = array_inode[id]->i_size;
+    int i, j, ii, jj;
+    strcpy(filesbuf, "");
+    for(i = 0; i < siz; ++i) {
+        int bid = array_inode[id]->i_addr[i];
+        get_single_block(bid);
+        strncat(filesbuf, single_block, 512/2); //字节计数
+    }
+    strcat(filesbuf, inputbuf);
+    strcpy(inputbuf, filesbuf);
+    for(i = 0; i < siz; ++i) {
+        set_block_unused(array_inode[id]->i_addr[i]);
+    }
+    siz = strlen(inputbuf) * 2;
+    ii =  (siz + 511) / 512;
+    jj = siz - siz / 512;
+    array_inode[id]->i_size = ii;
+    for(i = 0; i < ii; ++i) {
+        array_inode[id]->i_addr[i] = balloc();
+        if(array_inode[id]->i_addr[i] < 0) {
+            printf("error: 没有空间，写入失败\n");
+            return ;
+        }
+        get_single_block(array_inode[id]->i_addr[i]);
+        memcpy(single_block, inputbuf + i * 512, 512);
+    }
+}
+
+int command_write(char* path) {
+    int iid = get_inode_from_path(path);
+    int pid, len, siz;
+    if(iid > 0 && is_dir(iid)) {
+        printf("write: 错误: %s是已存在的文件\n", path);
+        return -1;
+    }
+    if(iid < 0) {
+        pid = get_inode_from_path(get_pre_path(path));
+        if(pid < 0) {
+            printf("write: 错误: %s不存在\n", path);
+            return -1;
+        }
+        if(!is_dir(pid)) {
+            printf("write: 错误: 不存在该路径！\n");
+            return -1;
+        }
+        if(!have_authority(curr_user, pid, 'w')) {
+            printf("write: 错误: 没有写权限\n");
+            return -1;
+        }
+        puts("请输入要写入的内容");
+        fgets(inputbuf, 1024*256/2, stdin);
+        inputbuf[strlen(inputbuf) - 1] = 0;
+        do_write(pid, get_back_path(path));
+        return 1;
+    }
+    pid = array_inode[iid]->i_pid;
+    if(!have_authority(curr_user, pid, 'w')) {
+        printf("write: 错误: 没有写权限\n");
+        return -1;
+    }
+    if(is_important(iid)) {
+        printf("write: 错误: %s is important， cannot change\n", path);
+        return -1;
+    }
+    puts("请输入要添加的内容");
+    fgets(inputbuf, 1024*256/2, stdin);
+    inputbuf[strlen(inputbuf) - 1] = 0;
+    do_appand(iid);
+}
+
+void do_cat(int id) {
+    int siz = array_inode[id]->i_size;
+    strcpy(filesbuf, "");
+    int i, bid;
+    for(i = 0; i < siz; ++i) {
+        bid = array_inode[id]->i_addr[i];
+        get_single_block(bid);
+        strncat(filesbuf, single_block, 512/2);
+    }
+    printf("%s\n", filesbuf);
+}
+
+int command_cat(char* path) {
+    int iid = get_inode_from_path(path);
+    if(iid < 0) {
+        printf("cat: 错误: %s不存在\n", path);
+        return -1;
+    }
+    if(is_dir(iid)) {
+        printf("cat: 错误: %s是文件夹\n", path);
+        return -1;
+    }
+    if(!have_authority(curr_user, iid, 'r')) {
+        printf("cat: 错误: 没有读权限\n");
+        return -1;
+    }
+    if(is_important(iid)) {
+        printf("cat: 错误: file is important, cannot show it\n");
+        return -1;
+    }
+    do_cat(iid);
+}
+
+int command_passwd(char* name, bool need_passwd) {
+    puts("do passwd");
+    int uid = get_password(name);
+    char pwbuf[100];
+    if(uid < 0) {
+        printf("passwd: 错误: 用户不存在\n");
+        return -1;
+    }
+    if(need_passwd) {
+        printf("请输入%s密码\n", name);
+        fgets(pwbuf, 100, stdin);
+        pwbuf[strlen(pwbuf) - 1] = 0;
+        //printf("%s | %s\n",pwbuf, passwordbuf);
+        if(strcmp(pwbuf, passwordbuf) != 0) {
+            printf("passwd: 错误: 密码错误\n");
+            return -1;
+        }
+    }
+    puts("请输入新密码");
+    fgets(pwbuf, 100, stdin);
+    pwbuf[strlen(pwbuf) - 1] = 0;
+    if(have_blank(pwbuf)) {
+        puts("密码中不能有空格！");
+        return -1;
+    }
+    //array_user[uid]->passwd
+    strcpy(array_user[uid]->passwd, pwbuf);
 }
 
 

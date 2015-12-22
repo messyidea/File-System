@@ -26,10 +26,12 @@ void extract_command(char* command) {
         commandbuf[command_num][j] = 0;
         command_num ++;
     }
+    /*
     puts("-------");
     printf("%d\n", command_num);
     for( i = 0; i < command_num; ++i) printf("%s\n",commandbuf[i]);
     puts("-------");
+    */
     return ;
 }
 
@@ -37,7 +39,7 @@ void shell() {
     printf("start shell\n");
     int i, j;
     bool flag;
-    char command[20][100];
+    char command[15][100];
     strcpy(command[0], "exit");
     strcpy(command[1], "mkdir");
     strcpy(command[2], "rmdir");
@@ -46,13 +48,16 @@ void shell() {
     strcpy(command[5], "touch");
     strcpy(command[6], "rm");
     strcpy(command[7], "cp");
-    strcpy(command[8], "read");
+    strcpy(command[8], "cat");
     strcpy(command[9], "write");
     strcpy(command[10], "cd");
     strcpy(command[11], "useradd");
     strcpy(command[12], "su");
+    strcpy(command[13], "passwd");
     int rst;
-    printf("%d %d %s\n", curr_inode, curr_user, get_username());
+    //printf("%d %d %s\n", curr_inode, curr_user, get_username());
+    inputbuf = (char*)malloc(1024*256);
+    filesbuf = (char*)malloc(1024*256);
     while(1) {
         //printf("currnode = %d\n", curr_inode);
         printf("%s:%s%c", get_username(), get_dirname(curr_inode), (curr_user == 0 ? '#' : '$'));
@@ -62,11 +67,80 @@ void shell() {
         if(commandbuf[0][strlen(commandbuf[0]) - 1] == '?') {
             commandbuf[0][strlen(commandbuf[0]) - 1] = 0;
             puts("show help");
-            printf("%s\n",commandbuf[0]);
+            rst = -1;
+            for(i = 0; i < 14; ++i) {
+                if(strcmp(command[i], commandbuf[0]) == 0) {
+                    rst = i;
+                    break;
+                }
+            }
+            switch(rst) {
+                case 0: {
+                    puts("exit: 退出");
+                    break;
+                }
+                case 1: {
+                    puts("mkdir: 创建文件： mkdir name1 name2 ...");
+                    break;
+                }
+                case 2: {
+                    puts("rmdir: 删除文件: rmdir path1 path2 ...");
+                    break;
+                }
+                case 3: {
+                    puts("mv: 移动文件： mv path1 path2");
+                    break;
+                }
+                case 4: {
+                    puts("ls: 列出文件: ls path     or    ls");
+                    break;
+                }
+                case 5: {
+                    puts("touch: 创建空文件： touch name1 name2 ...");
+                    break;
+                }
+                case 6: {
+                    puts("rm: 删除文件: rm name1 name2 ...\n 如果要删除文件夹，请在最后加-r");
+                    break;
+                }
+                case 7: {
+                    puts("cp: 复制文件： cp file1 path \n 如果要移动文件夹， 请在最后加上-r");
+                    break;
+                }
+                case 8: {
+                    puts("cat： 显示文件： cat file");
+                    break;
+                }
+                case 9: {
+                    puts("write: 写入文件： write file");
+                    break;
+                }
+                case 10: {
+                    puts("cd: 切换目录： cd path");
+                    break;
+                }
+                case 11: {
+                    puts("useradd： 增加用户： useradd username");
+                    break;
+                }
+                case 12: {
+                    puts("su： 切换用户： su username");
+                    break;
+                }
+                case 13: {
+                    puts("passwd： 修改用户密码： passwd username");
+                    break;
+                }
+                default: {
+                    puts("unknow command");
+                    break;
+                }
+            }
+            //printf("%s\n",commandbuf[0]);
             continue;
         }
         rst = -1;
-        for(i = 0; i < 13; ++i) {
+        for(i = 0; i < 14; ++i) {
             if(strcmp(command[i], commandbuf[0]) == 0) {
                 rst = i;
                 break;
@@ -187,9 +261,29 @@ void shell() {
                 break;
             }
             case 8: {
+                if(command_num == 1 || command_num > 2) {
+                    printf("cat: 参数错误\n");
+                    break;
+                }
+                if(check_path(commandbuf[1])) {
+                    command_cat(commandbuf[1]);
+                } else {
+                    printf("cat: 路径错误\n");
+                    break;
+                }
                 break;
             }
             case 9: {
+                if(command_num == 1 || command_num > 2) {
+                    printf("write: 参数错误\n");
+                    break;
+                }
+                if(check_path(commandbuf[1])) {
+                    command_write(commandbuf[1]);
+                } else {
+                    printf("write: 路径错误\n");
+                    break;
+                }
                 break;
             }
             case 10: {
@@ -225,7 +319,24 @@ void shell() {
                 command_su(commandbuf[1]);
                 break;
             }
+            case 13: {
+                if(command_num > 2) {
+                    printf("su：参数错误\n");
+                    break;
+                }
+                if(command_num == 1) {
+                    command_passwd(get_username(), false);
+                    break;
+                }
+                if(curr_user == 0) {
+                    command_passwd(commandbuf[1], false);
+                } else {
+                    command_passwd(commandbuf[1], true);
+                }
+                break;
+            }
             default: {
+                puts("unknow command");
                 break;
             }
 

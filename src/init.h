@@ -122,11 +122,11 @@ void add_essential_file() {
 
 void init_filesystem() {
     int i,j, tmp, tmp2;
-    fp = open("m_filesystem", O_RDWR);
+    fp = open("disk", O_RDWR);
     //printf("fp == %d\n",fp);
     if(fp < 0) {
         //puts("filesystem not existed, new and init a filesystem");
-        fp = open("m_filesystem", O_RDWR|O_CREAT, 0777);
+        fp = open("disk", O_RDWR|O_CREAT, 0777);
         p_filesys = (struct filsys*)filesystem;
         p_filesys->s_isize = 512;
         p_filesys->s_fsize = 3 + 64 + 1024;
@@ -200,7 +200,7 @@ void init_filesystem() {
 
         tmp = get_inode_from_path("/etc/passwd");
         //puts("after get inode");
-        printf("tmp == %d\n", tmp);
+        //printf("tmp == %d\n", tmp);
         tmp2 = array_inode[tmp]->i_addr[0];
         //printf("important bid2 == %d\n",tmp2);
         get_single_block(tmp2);

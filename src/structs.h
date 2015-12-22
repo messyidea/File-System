@@ -58,6 +58,8 @@ typedef enum {
 }bool;
 
 char *filesystem;
+char *inputbuf;
+char *filesbuf;
 char *single_block;
 struct inode* array_inode[512];
 struct user* array_user[16];
