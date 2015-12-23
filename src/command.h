@@ -52,7 +52,7 @@ char* get_name_by_gid(int id) {
 }
 
 char* get_mode_str(int id) {
-    char str[16] = "dwrxwrxwrx";
+    char str[16] = "drwxrwxrwx";
     if(!is_dir(id)) str[0] = '-';
     int i, mod = array_inode[id]->i_mode;
     for(i = 0; i < 8; ++i) {
@@ -691,6 +691,7 @@ char* get_pre_path(char* path) {
     if(tpath[i] == '/') i --;
     for(; tpath[i] != '/' && i >= 0; i--) ;
     while(i < 0) i ++;
+    if(i == 0 && tpath[i] == '/') return "/";
     tpath[i] = 0;
     if(i == 0) return "";
     return tpath;
@@ -763,23 +764,32 @@ void do_cp_file(int id1, int id2, char* name) {
 
 
 void dfs_cp(int id1, int id2) {
+    //printf("dfscp %d %d\n", id1, id2);
+    int ci = 0;
     int i, j, k, bid, tid, ttid;
     int num = array_inode[id1]->i_count;
     int lastnum = num - (num - 1) / 16 * 16;
     int cou = array_inode[id1]->i_size;
+    //printf("num lastnum, cou == %d %d %d\n", num, lastnum, cou);
     for(i = 0; i < cou; ++ i) {
         bid = array_inode[id1]->i_addr[i];
         get_single_block(bid);
-        k = (i == cou-1? lastnum-1:16);
+        k = (i == cou-1? lastnum:16);
         for(j = 0; j < k; ++j) {
+            /* very very important */
+            get_single_block(bid);
             p_dir = (struct dir*)(single_block + j * (sizeof(struct dir)));
             if(strcmp(p_dir->name, ".") == 0 || strcmp(p_dir->name, "..") == 0) continue;
             tid = p_dir->inode;
+            //printf("tid == %d\n", tid);
             if(is_dir(tid)) {
+                //puts("do a");
+                //printf("dfs->name = %s\n", p_dir->name);
                 ttid = add_file(id2, p_dir->name);
                 set_inode_dir(ttid, id2, curr_user, curr_user, false);
                 dfs_cp(tid, ttid);
             } else {
+                //puts("do b");
                 do_cp_file(tid, id2, p_dir->name);
             }
         }
@@ -790,13 +800,14 @@ void dfs_cp(int id1, int id2) {
 int prepare_dfs_cp(int iid1, int iid2, char* name) {
     //check size...
 
-
+    //printf("name = %s\n", name);
     int id = add_file(iid2, name);
     set_inode_dir(id, iid2, curr_user, curr_user, false);
     dfs_cp(iid1, id);
 }
 
 int command_cp(char* path1, char*path2, bool flag) {
+    //printf("flag == %d\n", flag);
     int i, j, k;
     int iid1, iid2;
     int ppid = get_inode_from_path(path1);
@@ -805,11 +816,11 @@ int command_cp(char* path1, char*path2, bool flag) {
         return -1;
     }
     //如果path1是文件的话，去掉-r的选项。
-    if(!is_dir(iid1)) {
+    if(!is_dir(ppid)) {
         flag = false;
     }
     if(flag) {
-        //iid1存在且是文件
+        //iid1存在且是文件夹
         iid1 = get_inode_from_path(path1);
         if(!have_authority(curr_user, iid1, 'r')) {
             printf("cp: 错误: %s不可读\n", path1);
@@ -818,22 +829,26 @@ int command_cp(char* path1, char*path2, bool flag) {
         iid2 = get_inode_from_path(path2);
         if(iid2 < 0) {
             iid2 = get_inode_from_path(get_pre_path(path2));
+            //printf("iid2 == %d\n", iid2);
+            //printf("curruser = %d\n", curr_user);
             if(iid2 < 0) {
                 printf("cp: 错误: %s不存在\n", path2);
                 return -1;
             }
-            if(have_authority(curr_user, iid2, 'w')) {
+            if(!have_authority(curr_user, iid2, 'w')) {
                 printf("cp: 错误: %s不可写\n", path2);
                 return -1;
             }
             //start cp dfs
-            prepare_dfs_cp(iid1, iid2, get_back_path(get_back_path(path2)));
+            //printf("iid1 = %d | iid2 == %d\n", iid1, iid2);
+            //printf("backpath == %s\n", get_back_path(path2));
+            prepare_dfs_cp(iid1, iid2, get_back_path(path2));
         } else {
             if(!is_dir(iid2)) {
                 printf("cp: 错误: %s已存在，是文件\n", path2);
                 return -1;
             }
-            if(have_authority(curr_user, iid2, 'w')) {
+            if(!have_authority(curr_user, iid2, 'w')) {
                 printf("cp: 错误: %s不可写\n", path2);
                 return -1;
             }
@@ -848,7 +863,7 @@ int command_cp(char* path1, char*path2, bool flag) {
 
     } else {
         iid1 = get_inode_from_path(path1);
-        printf("iid1 == %d\n", iid1);
+        //printf("iid1 == %d\n", iid1);
         if(iid1 < 0) {
             printf("cp: 错误: %s不存在\n", path1);
             return -1;

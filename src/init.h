@@ -21,6 +21,7 @@ block 512字节
     filesystem = (char *) malloc (FILESYSTEMSIZE);
     // memset?
     buf = (char *)malloc(sizeof(char) * 1000);
+    namebuf = (char *)malloc(sizeof(char) * 1000);
 }
 
 

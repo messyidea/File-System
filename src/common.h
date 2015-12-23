@@ -62,14 +62,18 @@ int balloc() {
     //printf("balloc\n");
     int i;
     if(p_filesys->s_nfree < 0) {
-        //puts("lllllllllllllllllllllllllllll");
+        puts("lllllllllllllllllllllllllllll");
         for(i = 0; i < BLOCKNUM; ++i) {
             if(!is_block_used(i)) {
                 p_filesys->s_free[++(p_filesys->s_nfree)] = i;
                 if(p_filesys->s_nfree == 99) break;
             }
         }
-        if(p_filesys->s_nfree < 0) return -1;
+        if(p_filesys->s_nfree < 0) {
+            puts("fail");
+            exit(0);
+            return -1;
+        }
     }
     set_block_used(p_filesys->s_free[p_filesys->s_nfree --]);
 
@@ -93,7 +97,8 @@ void get_single_block(int id) {
     single_block = (char*)(filesystem + 512*(2 + 1 + 64 + id));
 }
 
-int add_file(int id, char name[14]) {
+int add_file(int id, char *name) {
+    //printf("file name == %s\n", name);
     int i, len;
     int before, after, place, iid, bid;
     place = array_inode[id]->i_count - ((array_inode[id]->i_count - 1) / 16) * 16;
@@ -101,8 +106,9 @@ int add_file(int id, char name[14]) {
     after = array_inode[id]->i_count;
     before = (before-1) / 16 + 1;
     after = (after-1) / 16 + 1;
-    char* namebuf = (char*)malloc(100);
+    namebuf[0] = 0;
     strcpy(namebuf, name);
+    //printf("namebuf = %s\n", namebuf);
     if(before == after) {
         //do not need to balloc
         get_single_block(array_inode[id]->i_addr[array_inode[id]->i_size - 1]);
