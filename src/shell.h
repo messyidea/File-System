@@ -10,7 +10,7 @@
 #include "command.h"
 
 
-
+// 解开命令，command_num表示命令的字符串数目，每个字符串存放在commandbuf中
 void extract_command(char* command) {
     int len = strlen(command);
     //printf("len == %d\n", len);

@@ -35,6 +35,7 @@ void command_ls(int id) {
 }
 */
 
+// 通过id找到用户名并返回
 char* get_name_by_uid(int id) {
     int i;
     for(i = 0; i < *user_num; ++i) {
@@ -43,6 +44,7 @@ char* get_name_by_uid(int id) {
     return "";
 }
 
+// 通过gid找到groupname并返回
 char* get_name_by_gid(int id) {
     int i;
     for(i = 0; i < *group_num; ++i) {
@@ -51,6 +53,7 @@ char* get_name_by_gid(int id) {
     return "";
 }
 
+// 通过inodeid获取权限字段
 char* get_mode_str(int id) {
     char str[16] = "drwxrwxrwx";
     if(!is_dir(id)) str[0] = '-';
@@ -63,6 +66,7 @@ char* get_mode_str(int id) {
     return str;
 }
 
+// ls命令，显示path中的文件和文件夹
 void command_ls(char *path) {
     int id = get_inode_from_path(path);
     if(id < 0) {
@@ -100,7 +104,7 @@ void command_ls(char *path) {
     return "";
 }
 
-
+// cd命令，切换到path目录
 void command_cd(char* path) {
     int iid = get_inode_from_path(path);
     if(iid < 0) {
@@ -118,6 +122,7 @@ void command_cd(char* path) {
     curr_inode = iid;
 }
 
+// mkdir命令，创建文件夹，path为文件夹名
 int command_mkdir(char* path, bool is_important, int uid, int gid) {
 
     int tmpid, pos = 0, pos2, pid = 0, iid;
@@ -157,6 +162,7 @@ int command_mkdir(char* path, bool is_important, int uid, int gid) {
     return 1;
 }
 
+// touch命令，创建空文件
 int command_touch(char* path, bool is_important, int uid, int gid) {
     int tmpid, pos = 0, pos2, pid = 0, iid;
     int len;
@@ -196,7 +202,7 @@ int command_touch(char* path, bool is_important, int uid, int gid) {
 }
 
 
-
+// rmdir命令，删除文件夹
 int command_rmdir(char* path) {
     if(strcmp(path, ".") == 0 || strcmp(path, "./") == 0) {
         printf("rmdir: 删除'.'失败： 无效的参数\n");
@@ -234,6 +240,7 @@ int command_rmdir(char* path) {
     remove_empty_dir(iid);
 }
 
+// 增加用户
 void adduser(char* username, char* password) {
     int uid, gid, iid, backup_user;
     char path_buf[100];
@@ -266,6 +273,7 @@ void adduser(char* username, char* password) {
     //curr_user = backup_user;
 }
 
+// 判断字符串中是否有空格
 bool have_blank(char* password) {
     int len = strlen(password);
     int i;
@@ -275,6 +283,7 @@ bool have_blank(char* password) {
     return false;
 }
 
+// 增加用户命令
 int command_adduser(char* username) {
     char temp_path[100];
     strcpy(temp_path, "/home/");
@@ -308,6 +317,7 @@ int command_adduser(char* username) {
     }
 }
 
+// 切换用户命令
 int command_su(char* username) {
     int uid = get_password(username);
     char passwordbuf1[100];
@@ -333,12 +343,13 @@ int command_su(char* username) {
 
 }
 
+// 获取inode对应的名字
 char* get_singlename_use_inode(int id) {
     int pid = array_inode[id]->i_pid;
     return get_singlepath_from_inode(pid, id);
 }
 
-//支持相对路径和绝对路径。目录自动判断等
+//支持相对路径和绝对路径。目录自动判断等， 移动path1到path2
 int command_mv(char* path1, char* path2) {
     //printf("path1 = %s | path2 = %s\n", path1, path2);
 
@@ -560,6 +571,7 @@ int command_mv(char* path1, char* path2) {
 
 }
 
+// 通过id删除file，没有进行父目录的文件条目的删除
 void remove_file_itself(int id) {
     int i, j, bid;
     int *num, *tid;
@@ -586,7 +598,7 @@ void remove_file_itself(int id) {
     set_inode_unused(id);
 }
 
-
+// 递归删除id对应目录中的文件和文件夹
 void dfs_rm(int id) {
     int i, j, k;
     int num, lastnum, bid;
@@ -631,6 +643,7 @@ void dfs_rm(int id) {
     }
 }
 
+// 删除path，flag为true时，加了-r选项
 int command_rm(char* path, bool flag) {
     int iid;
     if(flag) {
@@ -681,6 +694,7 @@ int command_rm(char* path, bool flag) {
 
 }
 
+// 获取文件名的prepath，path为/etc/passwd时，prepath为/etc，支持绝对路径和相对路径
 char* get_pre_path(char* path) {
     //printf("path = %s\n",path);
     int i, j, len;
@@ -697,6 +711,7 @@ char* get_pre_path(char* path) {
     return tpath;
 }
 
+// 获取文件名的backpath，path为/etc/passwd时，prepath为passwd，支持绝对路径和相对路径
 char* get_back_path(char* path) {
     //printf("222 = %s\n", path);
     int i, j, len;
@@ -717,7 +732,7 @@ char* get_back_path(char* path) {
     return tpath2;
 }
 
-
+// copyid1到文件夹id2中，文件名为name
 void do_cp_file(int id1, int id2, char* name) {
     //printf("id1 quanxian222 = %d\n", array_inode[id1]->i_mode);
     //printf("name name== %s\n", name);
@@ -762,7 +777,7 @@ void do_cp_file(int id1, int id2, char* name) {
     }
 }
 
-
+// 递归复制id1到id2，id1和id2为inode标号
 void dfs_cp(int id1, int id2) {
     //printf("dfscp %d %d\n", id1, id2);
     int ci = 0;
@@ -806,6 +821,7 @@ int prepare_dfs_cp(int iid1, int iid2, char* name) {
     dfs_cp(iid1, id);
 }
 
+// cp命令，cp path1到path2，flag为true时，加了-r选项
 int command_cp(char* path1, char*path2, bool flag) {
     //printf("flag == %d\n", flag);
     int i, j, k;
@@ -925,6 +941,7 @@ int command_cp(char* path1, char*path2, bool flag) {
     }
 }
 
+// 写入内容到pid，文件名为name，内容由用户输入
 void do_write(int pid, char *name) {
     //to do:large file
     int id = add_file(pid, name);
@@ -949,6 +966,7 @@ void do_write(int pid, char *name) {
     }
 }
 
+// 添加内容到id，内容由用户输入
 void do_appand(int id) {
     int siz = array_inode[id]->i_size;
     int i, j, ii, jj;
@@ -978,6 +996,7 @@ void do_appand(int id) {
     }
 }
 
+// write命令
 int command_write(char* path) {
     int iid = get_inode_from_path(path);
     int pid, len, siz;
@@ -1020,6 +1039,7 @@ int command_write(char* path) {
     do_appand(iid);
 }
 
+// 显示id内容
 void do_cat(int id) {
     int siz = array_inode[id]->i_size;
     strcpy(filesbuf, "");
@@ -1031,7 +1051,7 @@ void do_cat(int id) {
     }
     printf("%s\n", filesbuf);
 }
-
+// cat命令
 int command_cat(char* path) {
     int iid = get_inode_from_path(path);
     if(iid < 0) {
@@ -1053,6 +1073,7 @@ int command_cat(char* path) {
     do_cat(iid);
 }
 
+// passwd命令
 int command_passwd(char* name, bool need_passwd) {
     puts("do passwd");
     int uid = get_password(name);

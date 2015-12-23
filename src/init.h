@@ -9,7 +9,7 @@
 #include "common.h"
 #include "shell.h"
 
-
+// 初始化数据
 void init_data() {
 /*
 super_node 1024字节
@@ -24,7 +24,7 @@ block 512字节
     namebuf = (char *)malloc(sizeof(char) * 1000);
 }
 
-
+// 创建root目录
 void create_root_dir() {
     int iid, bid;
     // must 0
@@ -52,6 +52,7 @@ void create_root_dir() {
 
 }
 
+// 创建一些必要的文件
 void add_essential_file() {
     int etc_iid, home_iid, root_iid, passwd_iid, bid, i;
     //puts("create etc");
@@ -121,6 +122,7 @@ void add_essential_file() {
     array_user_group[0]->gid = 0;
 }
 
+// 初始化文件系统
 void init_filesystem() {
     int i,j, tmp, tmp2;
     fp = open("disk", O_RDWR);
@@ -230,6 +232,7 @@ void init_filesystem() {
         puts("init success");
     }
 }
+// 初始化
 void init() {
     //data init
     init_data();

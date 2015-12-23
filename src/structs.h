@@ -1,6 +1,7 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
 
+// 超级块
 struct filsys {
     int s_isize;
     int s_fsize;
@@ -15,7 +16,7 @@ struct filsys {
 //    char s_time[2];
 //    int pad[50];
 };
-
+// inode
 struct inode {
     int i_mode;
     char i_uid;
@@ -32,7 +33,7 @@ struct dir {
     char name[14];
 };
 
-
+// 块表
 struct used_block {
     int u[32];
 };
@@ -53,6 +54,7 @@ struct user_group {
     int gid;
 };
 
+// c里面没有bool类型
 typedef enum {
     false, true
 }bool;

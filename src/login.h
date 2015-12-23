@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+// 根据用户名获取用户密码。如果找不到用户返回-1.密码保存在passwordbuf中
 int get_password(char *username) {
     int i;
     for(i = 0; i < *user_num; ++i) {
@@ -17,7 +18,7 @@ int get_password(char *username) {
     }
     return -1;
 }
-
+// 登录
 bool login() {
     int i, j, len, pos = 0, uid, p;
     while(1) {
