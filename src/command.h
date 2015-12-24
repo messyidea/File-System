@@ -304,7 +304,6 @@ int command_adduser(char* username) {
 int command_su(char* username) {
     int uid = get_password(username);
     char passwordbuf1[100];
-    printf("uid == %d\n", uid);
     if(uid < 0) {
         printf("su: 切换用户%s失败： 用户不存在\n", username);
         return -1;

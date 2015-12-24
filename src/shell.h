@@ -144,8 +144,6 @@ void shell() {
         }
         switch(rst) {
             case 0: {
-                printf("user_num == %d\n", *user_num);
-                printf("fp == %d\n",fp);
                 save();
                 puts("退出");
 
