@@ -13,7 +13,6 @@
 // 解开命令，command_num表示命令的字符串数目，每个字符串存放在commandbuf中
 void extract_command(char* command) {
     int len = strlen(command);
-    //printf("len == %d\n", len);
     int i, j, p;
     command_num = 0;
     for(i = 0; i < len; ++i) {
@@ -55,11 +54,9 @@ void shell() {
     strcpy(command[12], "su");
     strcpy(command[13], "passwd");
     int rst;
-    //printf("%d %d %s\n", curr_inode, curr_user, get_username());
     inputbuf = (char*)malloc(1024*256);
     filesbuf = (char*)malloc(1024*256);
     while(1) {
-        //printf("currnode = %d\n", curr_inode);
         printf("%s:%s%c", get_username(), get_dirname(curr_inode), (curr_user == 0 ? '#' : '$'));
         fgets(buf, 1000, stdin);
         buf[strlen(buf) - 1] = 0;
@@ -136,7 +133,6 @@ void shell() {
                     break;
                 }
             }
-            //printf("%s\n",commandbuf[0]);
             continue;
         }
         rst = -1;

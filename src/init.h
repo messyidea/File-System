@@ -28,7 +28,6 @@ block 512字节
 void create_root_dir() {
     int iid, bid;
     // must 0
-    //iid = ialloc();
     set_inode_used(root_inode);
     array_inode[root_inode]->i_uid = ROOTUID;
     array_inode[root_inode]->i_gid = ROOTGID;
@@ -37,17 +36,13 @@ void create_root_dir() {
     array_inode[root_inode]->i_size = (2-1) / 16 + 1;   //2 dir apply 1 block
     array_inode[root_inode]->i_count = 2;               //2 dir . and ..
     bid = balloc();
-    //printf("balloc  bid = %d\n", bid);
-    //printf("is block used = %d\n", is_block_used(bid));
     array_inode[root_inode]->i_addr[0] = bid;
     get_single_block(bid);
     p_dir = (struct dir*)(single_block);
     p_dir->inode = root_inode;
-    //p_dir->name = ".";
     strcpy(p_dir->name, ".");
     p_dir = (struct dir*)(single_block + sizeof(struct dir));
     p_dir->inode = root_inode;
-    //p_dir->name = "..";
     strcpy(p_dir->name, "..");
 
 }
@@ -74,8 +69,6 @@ void add_essential_file() {
 
     // the first block: user_num, group_num and user_group_num
     bid = balloc();
-    //printf("import bid == %d\n", bid);
-    //printf("is bid used== %d %d\n", is_block_used(bid), is_block_used(bid - 1));
     array_inode[passwd_iid]->i_addr[0] = bid;
     get_single_block(bid);
     user_num = (int*)single_block;
@@ -126,17 +119,13 @@ void add_essential_file() {
 void init_filesystem() {
     int i,j, tmp, tmp2;
     fp = open("disk", O_RDWR);
-    //printf("fp == %d\n",fp);
     if(fp < 0) {
-        //puts("filesystem not existed, new and init a filesystem");
         fp = open("disk", O_RDWR|O_CREAT, 0777);
         p_filesys = (struct filsys*)filesystem;
         p_filesys->s_isize = 512;
         p_filesys->s_fsize = 3 + 64 + 1024;
         p_filesys->s_nfree = 99;
         p_filesys->s_ninode = 99;
-        //printf("%d\n", p_filesys->s_ninode);
-        //printf("sizeof inode = %d\n",sizeof(struct inode));
         // init stack
         for(i = 0; i < 100; ++i) {
             p_filesys->s_free[i] = i;
@@ -159,19 +148,12 @@ void init_filesystem() {
         // add etc passwd to save passwd
         add_essential_file();
 
-        //printf("sizeof p_filesys = %d\n", sizeof(*p_filesys));
         puts("start write");
-        //write(fp, filesystem, FILESYSTEMSIZE);
         save();
 
-        //read(fp1, filesystem, FILESYSTEMSIZE);
-        //printf("%d\n", p_filesys->s_isize);
-        //close(fp1);
     } else {
         read(fp, filesystem, FILESYSTEMSIZE);
         p_filesys = (struct filesys*)filesystem;
-        //printf("sisize == %d\n", p_filesys->s_isize);
-        //printf("fsize == %d\n", p_filesys->s_fsize);
         // get node
         for(i = 0; i < 512; ++i) {
             array_inode[i] = (struct inode*)(filesystem + 512*3 + 64*i);
@@ -179,7 +161,6 @@ void init_filesystem() {
         //get block
         p_used_block = (struct used_block *)(filesystem + 512*2);
 
-        //puts("xixi");
         //debug_show_dir(0);
 
         //get passwd
@@ -194,22 +175,14 @@ void init_filesystem() {
         get_single_block(tmp);
         p_dir = (struct dir*)(single_block + 2*(sizeof(struct dir)));
         tmp = p_dir->inode;
-        //printf("name == %s\n", p_dir->name);
-        //now tmp is the inode of passwd
 
-        printf("tmp == %d\n",tmp);
-        printf("from function = %d\n", get_inode_from_path("/etc/passwd"));
         */
 
         tmp = get_inode_from_path("/etc/passwd");
-        //puts("after get inode");
-        //printf("tmp == %d\n", tmp);
         tmp2 = array_inode[tmp]->i_addr[0];
-        //printf("important bid2 == %d\n",tmp2);
         get_single_block(tmp2);
 
         user_num = (int*)single_block;
-        //printf("user_num == %d\n", *user_num);
         group_num = (int*)(single_block + 4);
         user_group_num = (int*)(single_block + 8);
         max_uid = (int*)(single_block + 12);

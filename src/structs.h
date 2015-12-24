@@ -9,12 +9,6 @@ struct filsys {
     int s_free[100];
     int s_ninode;
     int s_inode[100];
-//    char s_flock;
-//    char s_ilock;
-//    char s_fmod;
-//    char s_ronly;
-//    char s_time[2];
-//    int pad[50];
 };
 // inode
 struct inode {

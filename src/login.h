@@ -10,7 +10,6 @@
 int get_password(char *username) {
     int i;
     for(i = 0; i < *user_num; ++i) {
-        //printf("%s | %s\n", array_user[i]->name, username);
         if(strcmp(array_user[i]->name, username) == 0) {
             strcpy(passwordbuf, array_user[i]->passwd);
             return i;
@@ -74,7 +73,6 @@ INPUT_USER_NAME:
             }
             goto INPUT_USER_NAME;
         }
-        //printf("%d %s\n",strlen(buf), buf);
         return ;
 
     }

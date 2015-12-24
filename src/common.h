@@ -102,7 +102,6 @@ void get_single_block(int id) {
 }
 // 在文件夹id中添加一个inode，名字叫name
 int add_file(int id, char *name) {
-    //printf("file name == %s\n", name);
     int i, len;
     int before, after, place, iid, bid;
     place = array_inode[id]->i_count - ((array_inode[id]->i_count - 1) / 16) * 16;
@@ -112,7 +111,6 @@ int add_file(int id, char *name) {
     after = (after-1) / 16 + 1;
     namebuf[0] = 0;
     strcpy(namebuf, name);
-    //printf("namebuf = %s\n", namebuf);
     if(before == after) {
         //do not need to balloc
         get_single_block(array_inode[id]->i_addr[array_inode[id]->i_size - 1]);
@@ -155,11 +153,9 @@ bool set_inode_dir(int id, int pid, int uid, int gid, bool is_important) {
     get_single_block(bid);
     p_dir = (struct dir*)(single_block);
     p_dir->inode = id;
-    //p_dir->name = ".";
     strcpy(p_dir->name, ".");
     p_dir = (struct dir*)(single_block + sizeof(struct dir));
     p_dir->inode = pid;
-    //p_dir->name = "..";
     strcpy(p_dir->name, "..");
 }
 
@@ -179,7 +175,6 @@ bool is_dir(int id) {
 }
 // 从文件夹id中找文件path，找到返回inode，没找到返回-1
 int find_inode_from_single_path(int id, char *path) {
-    //printf("find inode from single path %d\n", id);
     int i, j, tmpid;
     if(!is_dir(id)) return -1;
     int lastnum, num;
@@ -200,7 +195,6 @@ int find_inode_from_single_path(int id, char *path) {
     get_single_block(tmpid);
     for(j = 0;j < lastnum; ++j) {
         p_dir = (struct dir*)(single_block + j * (sizeof(struct dir)));
-        //printf("%s\n", p_dir->name);
         if(strcmp(p_dir->name, path) == 0) return p_dir->inode;
     }
     return -1;
@@ -267,7 +261,6 @@ char* get_singlepath_from_inode(int id, int id2) {
     get_single_block(tmpid);
     for(j = 0;j < lastnum; ++j) {
         p_dir = (struct dir*)(single_block + j * (sizeof(struct dir)));
-        //printf("-----%d %d\n", p_dir->inode, id2);
         if(p_dir->inode == id2 ) return p_dir->name;
     }
     return "";
@@ -281,14 +274,12 @@ char* get_dirname(int id) {
     while(id != 0) {
         id = find_inode_from_single_path(id, "..");
         sta[pos ++] = id;
-        //printf("id = %d\n", id);
     }
     strcpy(buf, "/");
     pos --;
     tid = 0;
     while(--pos >= 0) {
         tid = sta[pos + 1];
-        //printf("%d %d %s\n", tid, sta[pos], get_singlepath_from_inode(tid, sta[pos]));
         strcat(buf, get_singlepath_from_inode(tid, sta[pos]));
         if(pos != 0) strcat(buf, "/");
     }
@@ -431,7 +422,6 @@ void change_dir_name(int id, int id2, char*dirname) {
     get_single_block(tmpid);
     for(j = 0;j < lastnum; ++j) {
         p_dir = (struct dir*)(single_block + j * (sizeof(struct dir)));
-        //printf("-----%d %d\n", p_dir->inode, id2);
         if(p_dir->inode == id2 ) strcpy(p_dir->name, dirname);
     }
 }

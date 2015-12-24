@@ -89,7 +89,6 @@ void command_ls(char *path) {
         for(j = 0;j < 16; ++j) {
             p_dir = (struct dir*)(single_block + j * (sizeof(struct dir)));
             printf("%-20s%-10d%-15s%-15s%-15s\n", get_mode_str(p_dir->inode), p_dir->inode, get_name_by_uid(array_inode[p_dir->inode]->i_uid), get_name_by_gid(array_inode[p_dir->inode]->i_gid), p_dir->name);
-            //printf("%s     \n", p_dir->name);
         }
     }
     i = num - 1;
@@ -97,8 +96,6 @@ void command_ls(char *path) {
     get_single_block(tmpid);
     for(j = 0;j < lastnum; ++j) {
         p_dir = (struct dir*)(single_block + j * (sizeof(struct dir)));
-        //printf("-----%d %d\n", p_dir->inode, id2);
-        //printf("%s     \n", p_dir->name);
         printf("%-20s%-10d%-15s%-15s%-15s\n", get_mode_str(p_dir->inode), p_dir->inode, get_name_by_uid(array_inode[p_dir->inode]->i_uid), get_name_by_gid(array_inode[p_dir->inode]->i_gid), p_dir->name);
     }
     return "";
@@ -151,7 +148,6 @@ int command_mkdir(char* path, bool is_important, int uid, int gid) {
         printf("mkdir:无法创建目录 '%s'： 文件已存在\n", single_pathbuf);
         return -1;
     }
-    //printf("user = %d | pid = %d | auth = %d\n", curr_user, pid, have_authority(curr_user, pid, 'w'));
     if(!have_authority(curr_user, pid, 'w')) {
         printf("mkdir:无法创建目录 '%s'： 没有权限\n", single_pathbuf);
         return -1;
@@ -190,14 +186,12 @@ int command_touch(char* path, bool is_important, int uid, int gid) {
         printf("touch:无法创建文件 '%s'： 文件已存在\n", single_pathbuf);
         return -1;
     }
-    //printf("user = %d | pid = %d | auth = %d\n", curr_user, pid, have_authority(curr_user, pid, 'w'));
     if(!have_authority(curr_user, pid, 'w')) {
         printf("touch :无法创建文件 '%s'： 没有权限\n", single_pathbuf);
         return -1;
     }
     iid = add_file(pid, single_pathbuf);
     set_inode_file(iid, pid, uid, gid, is_important);
-    //balloc();
     return 1;
 }
 
@@ -210,12 +204,10 @@ int command_rmdir(char* path) {
     }
     int pid;
     int iid = get_inode_from_path(path);
-    //printf("rmdir %d\n", iid);
     if(iid < 0) {
         printf("rmdir: 删除%s失败：目录不存在！\n", path);
         return -1;
     }
-    //printf("isdir == %d\n", is_dir(iid));
     if(!is_dir(iid)) {
         printf("rmdir: 删除%s失败：要删除的是文件！\n", path);
         return -2;
@@ -224,7 +216,6 @@ int command_rmdir(char* path) {
         printf("rmdir: 删除%s失败：目录非空\n", path);
         return -3;
     }
-    //quanxian
     //root important
     if(have_authority(curr_user, iid, 'w') && is_important(iid)) {
         printf("rmdir:无法删除目录 '%s'： dir is important\n", path);
@@ -249,7 +240,6 @@ void adduser(char* username, char* password) {
     (*user_num) ++;
     (*group_num) ++;
     (*user_group_num) ++;
-    //printf("usernum == %d\n", *user_num);
     array_user[(*user_num) - 1]->uid = uid;
     strcpy(array_user[(*user_num) - 1]->passwd, password);
     strcpy(array_user[(*user_num) - 1]->name, username);
@@ -260,17 +250,10 @@ void adduser(char* username, char* password) {
     array_user_group[(*user_group_num) - 1]->uid = uid;
     array_user_group[(*user_group_num) - 1]->gid = gid;
 
-    //backup_user = curr_user;
-    //curr_user = uid;
     strcpy(path_buf, "/home/");
     strcat(path_buf, username);
     command_mkdir(path_buf, true, uid, gid);
 
-
-    //set important
-
-
-    //curr_user = backup_user;
 }
 
 // 判断字符串中是否有空格
@@ -351,13 +334,8 @@ char* get_singlename_use_inode(int id) {
 
 //支持相对路径和绝对路径。目录自动判断等， 移动path1到path2
 int command_mv(char* path1, char* path2) {
-    //printf("path1 = %s | path2 = %s\n", path1, path2);
-
-
     int idd1 = get_inode_from_path(path1);
-    //printf("idd1 == %d\n", idd1);
     int idd2 = get_inode_from_path(path2);
-    //printf("idd1 == %d idd2 == %d\n", idd1, idd2);
     char name[100];
     int i, j, p, k;
     if(idd1 < 0) {
@@ -381,7 +359,6 @@ int command_mv(char* path1, char* path2) {
                 return -1;
             }
             int tid = add_file(idd2, name);
-            //printf("tid == %d\n", tid);
             if(tid == -1) {
                 printf("mv: 错误：block空间不足 %s\n");
                 return -1;
@@ -416,14 +393,10 @@ int command_mv(char* path1, char* path2) {
         j++;
         //j - i  就是 文件名
         p = 0;
-        //printf("j - i = %d - %d\n", j , i);
         for(k = j; k <= i; ++k) name[p ++] = path2[k];
         name[p] = 0;
-        //printf("debug name == %s\n", name);
         path2[j] = 0;
-        //printf("path2 == %s\n", path2);
         idd2 = get_inode_from_path(path2);
-        //printf("idd2 == %d\n", idd2);
         if(idd2 < 0) {
             printf("mv: 错误： 不存在 %s\n", path2);
             return -1;
@@ -442,7 +415,6 @@ int command_mv(char* path1, char* path2) {
             return 0;
         }
         int tid = add_file(idd2, name);
-        //printf("tid == %d\n", tid);
         if(tid == -1) {
             printf("mv: 错误：block空间不足 %s\n");
             return -1;
@@ -485,7 +457,6 @@ int command_mv(char* path1, char* path2) {
                 return -1;
             }
             int tid = add_file(idd2, name);
-            //printf("tid == %d\n", tid);
             if(tid == -1) {
                 printf("mv: 错误：block空间不足 %s\n");
                 return -1;
@@ -518,14 +489,10 @@ int command_mv(char* path1, char* path2) {
             j++;
             //j - i  就是 文件名
             p = 0;
-            //printf("j - i = %d - %d\n", j , i);
             for(k = j; k <= i; ++k) name[p ++] = path2[k];
             name[p] = 0;
-            //printf("debug name == %s\n", name);
             path2[j] = 0;
-            //printf("path2 == %s\n", path2);
             idd2 = get_inode_from_path(path2);
-            //printf("idd2 == %d\n", idd2);
             if(idd2 < 0) {
                 printf("mv: 错误： 不存在 %s\n", path2);
                 return -1;
@@ -544,7 +511,6 @@ int command_mv(char* path1, char* path2) {
                 return 0;
             }
             int tid = add_file(idd2, name);
-            //printf("tid == %d\n", tid);
             if(tid == -1) {
                 printf("mv: 错误：block空间不足\n");
                 return -1;
@@ -567,7 +533,6 @@ int command_mv(char* path1, char* path2) {
 
     }
 
-    //if(!(have_authority(curr_user, idd1, 'r') && have_authority(curr_user, idd1, 'w') && have_authority(curr_user, iid2, 'r') && have_authority(curr_user, iid2, 'w')))
 
 }
 
@@ -603,7 +568,6 @@ void dfs_rm(int id) {
     int i, j, k;
     int num, lastnum, bid;
     if(!is_dir(id)) {
-        //remove_dir_use_inode(array_inode[id]->i_pid, id);
         remove_file_itself(id);
         return;
     } else {
@@ -647,7 +611,6 @@ void dfs_rm(int id) {
 int command_rm(char* path, bool flag) {
     int iid;
     if(flag) {
-        //printf("do rm force\n");
         iid = get_inode_from_path(path);
         if(iid < 0) {
             printf("rm: 错误：不存在 %s\n", path);
@@ -670,7 +633,6 @@ int command_rm(char* path, bool flag) {
         }
     } else {
         //only rm files
-        //printf("do rm!\n");
         iid = get_inode_from_path(path);
         if(iid < 0) {
             printf("rm: 错误：不存在 %s\n", path);
@@ -696,7 +658,6 @@ int command_rm(char* path, bool flag) {
 
 // 获取文件名的prepath，path为/etc/passwd时，prepath为/etc，支持绝对路径和相对路径
 char* get_pre_path(char* path) {
-    //printf("path = %s\n",path);
     int i, j, len;
     char tpath[100];
     strcpy(tpath, path);
@@ -713,7 +674,6 @@ char* get_pre_path(char* path) {
 
 // 获取文件名的backpath，path为/etc/passwd时，prepath为passwd，支持绝对路径和相对路径
 char* get_back_path(char* path) {
-    //printf("222 = %s\n", path);
     int i, j, len;
     char tpath[100] = "", tpath2[100] = "";
     strcpy(tpath, path);
@@ -721,7 +681,6 @@ char* get_back_path(char* path) {
     i = len - 1;
     if(tpath[i] == '/') i --;
     for(; tpath[i] != '/' && i >= 0; i--) ;
-    //tpath[i] = 0;
     while(i < 0) i++;
     if(tpath[i] == '/') i++;
     j = 0;
@@ -734,13 +693,9 @@ char* get_back_path(char* path) {
 
 // copyid1到文件夹id2中，文件名为name
 void do_cp_file(int id1, int id2, char* name) {
-    //printf("id1 quanxian222 = %d\n", array_inode[id1]->i_mode);
-    //printf("name name== %s\n", name);
     int i, j, k, siz, bid, newblock;
     int *num, *bid2, *num2, *bid3;
-    //char* single_block2 = (char*)(filesystem + 512*(2 + 1 + 64 + id));
     char* single_block2;
-    //printf("id1 quanxian222 = %d\n", array_inode[id1]->i_mode);
     int id = add_file(id2, name);
     set_inode_file(id, id2, curr_user, curr_user, false);
     if(is_inode_large(id1)) {
@@ -773,19 +728,16 @@ void do_cp_file(int id1, int id2, char* name) {
             array_inode[id]->i_addr[i] = newblock;
             memcpy((filesystem + 512*(2 + 1 + 64 + newblock)), (filesystem + 512*(2 + 1 + 64 + bid)), 512);
         }
-        //printf("id1 quanxian222 = %d\n", array_inode[id1]->i_mode);
     }
 }
 
 // 递归复制id1到id2，id1和id2为inode标号
 void dfs_cp(int id1, int id2) {
-    //printf("dfscp %d %d\n", id1, id2);
     int ci = 0;
     int i, j, k, bid, tid, ttid;
     int num = array_inode[id1]->i_count;
     int lastnum = num - (num - 1) / 16 * 16;
     int cou = array_inode[id1]->i_size;
-    //printf("num lastnum, cou == %d %d %d\n", num, lastnum, cou);
     for(i = 0; i < cou; ++ i) {
         bid = array_inode[id1]->i_addr[i];
         get_single_block(bid);
@@ -796,15 +748,11 @@ void dfs_cp(int id1, int id2) {
             p_dir = (struct dir*)(single_block + j * (sizeof(struct dir)));
             if(strcmp(p_dir->name, ".") == 0 || strcmp(p_dir->name, "..") == 0) continue;
             tid = p_dir->inode;
-            //printf("tid == %d\n", tid);
             if(is_dir(tid)) {
-                //puts("do a");
-                //printf("dfs->name = %s\n", p_dir->name);
                 ttid = add_file(id2, p_dir->name);
                 set_inode_dir(ttid, id2, curr_user, curr_user, false);
                 dfs_cp(tid, ttid);
             } else {
-                //puts("do b");
                 do_cp_file(tid, id2, p_dir->name);
             }
         }
@@ -815,7 +763,6 @@ void dfs_cp(int id1, int id2) {
 int prepare_dfs_cp(int iid1, int iid2, char* name) {
     //check size...
 
-    //printf("name = %s\n", name);
     int id = add_file(iid2, name);
     set_inode_dir(id, iid2, curr_user, curr_user, false);
     dfs_cp(iid1, id);
@@ -823,7 +770,6 @@ int prepare_dfs_cp(int iid1, int iid2, char* name) {
 
 // cp命令，cp path1到path2，flag为true时，加了-r选项
 int command_cp(char* path1, char*path2, bool flag) {
-    //printf("flag == %d\n", flag);
     int i, j, k;
     int iid1, iid2;
     int ppid = get_inode_from_path(path1);
@@ -845,8 +791,6 @@ int command_cp(char* path1, char*path2, bool flag) {
         iid2 = get_inode_from_path(path2);
         if(iid2 < 0) {
             iid2 = get_inode_from_path(get_pre_path(path2));
-            //printf("iid2 == %d\n", iid2);
-            //printf("curruser = %d\n", curr_user);
             if(iid2 < 0) {
                 printf("cp: 错误: %s不存在\n", path2);
                 return -1;
@@ -856,8 +800,6 @@ int command_cp(char* path1, char*path2, bool flag) {
                 return -1;
             }
             //start cp dfs
-            //printf("iid1 = %d | iid2 == %d\n", iid1, iid2);
-            //printf("backpath == %s\n", get_back_path(path2));
             prepare_dfs_cp(iid1, iid2, get_back_path(path2));
         } else {
             if(!is_dir(iid2)) {
@@ -879,7 +821,6 @@ int command_cp(char* path1, char*path2, bool flag) {
 
     } else {
         iid1 = get_inode_from_path(path1);
-        //printf("iid1 == %d\n", iid1);
         if(iid1 < 0) {
             printf("cp: 错误: %s不存在\n", path1);
             return -1;
@@ -893,12 +834,7 @@ int command_cp(char* path1, char*path2, bool flag) {
             return -1;
         }
         iid2 = get_inode_from_path(path2);
-        //printf("iid2 == %d\n", iid2);
-        //printf("path2 == = %s\n", path2);
-        //printf("backpath = %s\n", get_back_path(path2));
         if(iid2 < 0) {
-            //printf("prepath = %s\n", get_pre_path(path2));
-            //printf("backpath = %s\n", get_back_path(path2));
             iid2 = get_inode_from_path(get_pre_path(path2));
             if(iid2 < 0) {
                 printf("cp: 错误: %s不存在\n", path2);
@@ -943,7 +879,6 @@ int command_cp(char* path1, char*path2, bool flag) {
 
 // 写入内容到pid，文件名为name，内容由用户输入
 void do_write(int pid, char *name) {
-    //to do:large file
     int id = add_file(pid, name);
     if(id < 0) {
         printf("error: 没有空间，写入失败\n");
@@ -1086,7 +1021,6 @@ int command_passwd(char* name, bool need_passwd) {
         printf("请输入%s密码\n", name);
         fgets(pwbuf, 100, stdin);
         pwbuf[strlen(pwbuf) - 1] = 0;
-        //printf("%s | %s\n",pwbuf, passwordbuf);
         if(strcmp(pwbuf, passwordbuf) != 0) {
             printf("passwd: 错误: 密码错误\n");
             return -1;
@@ -1099,7 +1033,6 @@ int command_passwd(char* name, bool need_passwd) {
         puts("密码中不能有空格！");
         return -1;
     }
-    //array_user[uid]->passwd
     strcpy(array_user[uid]->passwd, pwbuf);
 }
 
