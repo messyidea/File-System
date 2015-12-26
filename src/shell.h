@@ -129,7 +129,7 @@ void shell() {
                     puts("passwd： 修改用户密码： passwd username");
                     break;
                 }
-                case 13: {
+                case 14: {
                     puts("du： 显示文件或者文件夹体积：du path");
                     break;
                 }
@@ -334,7 +334,7 @@ void shell() {
                 }
                 break;
             }
-            case 13: {
+            case 14: {
                 if(command_num != 2) {
                     printf("du：参数错误\n");
                     break;
