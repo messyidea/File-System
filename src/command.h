@@ -1064,7 +1064,7 @@ int command_du(char* path) {
         printf("du: 错误: 路径不存在\n");
         return -1;
     }
-    printf("%-10dkb%s", get_size(id), path);
+    printf("%dkb          %s\n", get_size(id), path);
     return 0;
 }
 
