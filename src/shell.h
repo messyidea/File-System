@@ -53,6 +53,7 @@ void shell() {
     strcpy(command[11], "useradd");
     strcpy(command[12], "su");
     strcpy(command[13], "passwd");
+    strcpy(command[14], "du");
     int rst;
     inputbuf = (char*)malloc(1024*256);
     filesbuf = (char*)malloc(1024*256);
@@ -65,7 +66,7 @@ void shell() {
             commandbuf[0][strlen(commandbuf[0]) - 1] = 0;
             puts("show help");
             rst = -1;
-            for(i = 0; i < 14; ++i) {
+            for(i = 0; i < 15; ++i) {
                 if(strcmp(command[i], commandbuf[0]) == 0) {
                     rst = i;
                     break;
@@ -128,6 +129,10 @@ void shell() {
                     puts("passwd： 修改用户密码： passwd username");
                     break;
                 }
+                case 13: {
+                    puts("du： 显示文件或者文件夹体积：du path");
+                    break;
+                }
                 default: {
                     puts("unknow command");
                     break;
@@ -136,7 +141,7 @@ void shell() {
             continue;
         }
         rst = -1;
-        for(i = 0; i < 14; ++i) {
+        for(i = 0; i < 15; ++i) {
             if(strcmp(command[i], commandbuf[0]) == 0) {
                 rst = i;
                 break;
@@ -327,6 +332,18 @@ void shell() {
                 } else {
                     command_passwd(commandbuf[1], true);
                 }
+                break;
+            }
+            case 13: {
+                if(command_num != 2) {
+                    printf("du：参数错误\n");
+                    break;
+                }
+                if(!check_path(commandbuf[1])) {
+                    printf("du: 失败： 路径有误\n", commandbuf[1]);
+                    break;
+                }
+                command_du(commandbuf[1]);
                 break;
             }
             default: {

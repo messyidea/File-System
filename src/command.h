@@ -1009,7 +1009,7 @@ int command_cat(char* path) {
 
 // passwd命令
 int command_passwd(char* name, bool need_passwd) {
-    puts("do passwd");
+    //puts("do passwd");
     int uid = get_password(name);
     char pwbuf[100];
     if(uid < 0) {
@@ -1033,6 +1033,39 @@ int command_passwd(char* name, bool need_passwd) {
         return -1;
     }
     strcpy(array_user[uid]->passwd, pwbuf);
+}
+
+int get_size(int id) {
+    if(!is_dir(id)) {
+        return array_inode[id]->i_size;
+    }
+    int sum = 0;
+    int i, j, k, bid, tid, ttid;
+    int num = array_inode[id]->i_count;
+    int lastnum = num - (num - 1) / 16 * 16;
+    int cou = array_inode[id]->i_size;
+    for(i = 0; i < cou; ++ i) {
+        bid = array_inode[id]->i_addr[i];
+        get_single_block(bid);
+        k = (i == cou-1? lastnum:16);
+        for(j = 0; j < k; ++j) {
+            p_dir = (struct dir*)(single_block + j * (sizeof(struct dir)));
+            if(strcmp(p_dir->name, ".") == 0 || strcmp(p_dir->name, "..") == 0) continue;
+            tid = p_dir->inode;
+            sum += get_size(tid);
+        }
+    }
+    return sum;
+}
+
+int command_du(char* path) {
+    int id = get_inode_from_path(path);
+    if(id < 0) {
+        printf("du: 错误: 路径不存在\n");
+        return -1;
+    }
+    printf("%-10dkb%s", get_size(id), path);
+    return 0;
 }
 
 
