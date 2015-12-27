@@ -59,6 +59,7 @@ char *inputbuf;
 char *filesbuf;
 char *single_block;
 char *namebuf;
+char *output_pathbuf;
 struct inode* array_inode[512];
 struct user* array_user[16];
 struct group* array_group[32];

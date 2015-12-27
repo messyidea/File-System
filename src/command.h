@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+
 /*
 void command_ls(int id) {
     int i, j, tmpid;
@@ -576,12 +577,14 @@ void dfs_rm(int id) {
         get_single_block(bid);
         if(num == 1) {
             for(i = 2; i < lastnum; ++i) {
+                get_single_block(bid);
                 p_dir = (struct dir*)(single_block + i * (sizeof(struct dir)));
                 dfs_rm(p_dir->inode);
             }
             remove_file_itself(id);
         } else {
             for(i = 2; i < 16; ++i) {
+                get_single_block(bid);
                 p_dir = (struct dir*)(single_block + i * (sizeof(struct dir)));
                 dfs_rm(p_dir->inode);
             }
@@ -589,6 +592,7 @@ void dfs_rm(int id) {
                 bid = array_inode[id]->i_addr[i];
                 get_single_block(bid);
                 for(j = 0; j < 16 ; ++j) {
+                    get_single_block(bid);
                     p_dir = (struct dir*)(single_block + j * (sizeof(struct dir)));
                     dfs_rm(p_dir->inode);
                 }
@@ -597,6 +601,7 @@ void dfs_rm(int id) {
             bid = array_inode[id]->i_addr[i];
             get_single_block(bid);
             for(i = 0; i < lastnum; ++i) {
+                get_single_block(bid);
                 p_dir = (struct dir*)(single_block + i * (sizeof(struct dir)));
                 dfs_rm(p_dir->inode);
             }
@@ -1065,6 +1070,68 @@ int command_du(char* path) {
         return -1;
     }
     printf("%dkb          %s\n", get_size(id), path);
+    return 0;
+}
+
+int max(int a, int b) {
+    if(a > b) return a;
+    return b;
+}
+
+void show_tree(int id, int dep) {
+    int ii, jj;
+    for(ii = max(0, (dep-1)*4) + 1; ii < dep*4; ++ii)
+        output_pathbuf[ii] = ' ';
+    output_pathbuf[dep*4] = '|';
+    if(!is_dir(id)) {
+        output_pathbuf[dep*4] = '|';
+        output_pathbuf[dep*4 + 1] = 0;
+        printf("%s── %s\n", output_pathbuf, get_singlename_use_inode(id));
+        return ;
+    }
+    int sum = 0;
+    int i, j, k, bid, tid, ttid;
+    int num = array_inode[id]->i_count;
+    int lastnum = num - (num - 1) / 16 * 16;
+    int cou = array_inode[id]->i_size;
+    for(i = 0; i < cou; ++ i) {
+        bid = array_inode[id]->i_addr[i];
+        k = (i == cou-1? lastnum:16);
+        for(j = 0; j < k; ++j) {
+            get_single_block(bid);
+            p_dir = (struct dir*)(single_block + j * (sizeof(struct dir)));
+            //printf("%d %s\n",p_dir->inode, p_dir->name);
+            if(strcmp(p_dir->name, ".") == 0 || strcmp(p_dir->name, "..") == 0) continue;
+            tid = p_dir->inode;
+            if(is_dir(tid)) {
+                output_pathbuf[dep*4] = '|';
+                output_pathbuf[dep*4 + 1] = 0;
+                printf("%s── %s\n", output_pathbuf, p_dir->name);
+                if(i == cou - 1 && j == k-1) output_pathbuf[dep*4] = ' ';
+                show_tree(tid, dep + 1);
+            } else {
+                output_pathbuf[dep*4] = '|';
+                output_pathbuf[dep*4 + 1] = 0;
+                printf("%s── %s\n", output_pathbuf, p_dir->name);
+            }
+        }
+    }
+    return;
+}
+
+int command_tree(char* path) {
+    int id = get_inode_from_path(path);
+    if(id < 0) {
+        printf("tree: 错误: 路径不存在\n");
+        return -1;
+    }
+    if(!have_authority(curr_user, id, "r")) {
+        printf("tree: 错误: 没有读权限\n");
+        return -1;
+    }
+    printf("%s\n", path);
+    strcpy(output_pathbuf, "");
+    show_tree(id, 0);
     return 0;
 }
 

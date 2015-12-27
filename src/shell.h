@@ -38,7 +38,7 @@ void shell() {
     printf("start shell\n");
     int i, j;
     bool flag;
-    char command[15][100];
+    char command[16][100];
     strcpy(command[0], "exit");
     strcpy(command[1], "mkdir");
     strcpy(command[2], "rmdir");
@@ -54,6 +54,7 @@ void shell() {
     strcpy(command[12], "su");
     strcpy(command[13], "passwd");
     strcpy(command[14], "du");
+    strcpy(command[15], "tree");
     int rst;
     inputbuf = (char*)malloc(1024*256);
     filesbuf = (char*)malloc(1024*256);
@@ -66,7 +67,7 @@ void shell() {
             commandbuf[0][strlen(commandbuf[0]) - 1] = 0;
             puts("show help");
             rst = -1;
-            for(i = 0; i < 15; ++i) {
+            for(i = 0; i < 16; ++i) {
                 if(strcmp(command[i], commandbuf[0]) == 0) {
                     rst = i;
                     break;
@@ -133,6 +134,10 @@ void shell() {
                     puts("du： 显示文件或者文件夹体积：du path");
                     break;
                 }
+                case 15: {
+                    puts("tree： 显示文件树： tree path");
+                    break;
+                }
                 default: {
                     puts("unknow command");
                     break;
@@ -141,7 +146,7 @@ void shell() {
             continue;
         }
         rst = -1;
-        for(i = 0; i < 15; ++i) {
+        for(i = 0; i < 16; ++i) {
             if(strcmp(command[i], commandbuf[0]) == 0) {
                 rst = i;
                 break;
@@ -344,6 +349,22 @@ void shell() {
                     break;
                 }
                 command_du(commandbuf[1]);
+                break;
+            }
+            case 15: {
+                if(command_num > 2) {
+                    printf("tree：参数错误\n");
+                    break;
+                }
+                if(command_num == 1) {
+                    command_tree(get_dirname(curr_inode));
+                    break;
+                }
+                if(!check_path(commandbuf[1])) {
+                    printf("tree: 失败： 路径有误\n", commandbuf[1]);
+                    break;
+                }
+                command_tree(commandbuf[1]);
                 break;
             }
             default: {

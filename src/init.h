@@ -22,6 +22,7 @@ block 512字节
     // memset?
     buf = (char *)malloc(sizeof(char) * 1000);
     namebuf = (char *)malloc(sizeof(char) * 1000);
+    output_pathbuf = (char *)malloc(sizeof(char) * 1000);
 }
 
 // 创建root目录
