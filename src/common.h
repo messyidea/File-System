@@ -102,6 +102,9 @@ void get_single_block(int id) {
 }
 // 在文件夹id中添加一个inode，名字叫name
 int add_file(int id, char *name) {
+    //?
+    namebuf[0] = 0;
+    strcpy(namebuf, name);
     int i, len;
     int before, after, place, iid, bid;
     place = array_inode[id]->i_count - ((array_inode[id]->i_count - 1) / 16) * 16;
@@ -109,8 +112,6 @@ int add_file(int id, char *name) {
     after = array_inode[id]->i_count;
     before = (before-1) / 16 + 1;
     after = (after-1) / 16 + 1;
-    namebuf[0] = 0;
-    strcpy(namebuf, name);
     if(before == after) {
         //do not need to balloc
         get_single_block(array_inode[id]->i_addr[array_inode[id]->i_size - 1]);
