@@ -38,7 +38,7 @@ void shell() {
     printf("start shell\n");
     int i, j;
     bool flag;
-    char command[16][100];
+    char command[17][100];
     strcpy(command[0], "exit");
     strcpy(command[1], "mkdir");
     strcpy(command[2], "rmdir");
@@ -55,6 +55,7 @@ void shell() {
     strcpy(command[13], "passwd");
     strcpy(command[14], "du");
     strcpy(command[15], "tree");
+    strcpy(command[16], "chmod");
     int rst;
     inputbuf = (char*)malloc(1024*256);
     filesbuf = (char*)malloc(1024*256);
@@ -67,7 +68,7 @@ void shell() {
             commandbuf[0][strlen(commandbuf[0]) - 1] = 0;
             puts("show help");
             rst = -1;
-            for(i = 0; i < 16; ++i) {
+            for(i = 0; i < 17; ++i) {
                 if(strcmp(command[i], commandbuf[0]) == 0) {
                     rst = i;
                     break;
@@ -138,6 +139,10 @@ void shell() {
                     puts("tree： 显示文件树： tree path");
                     break;
                 }
+                case 16: {
+                    puts("chmod： 改变文件权限： chmod 777 path");
+                    break;
+                }
                 default: {
                     puts("unknow command");
                     break;
@@ -146,7 +151,7 @@ void shell() {
             continue;
         }
         rst = -1;
-        for(i = 0; i < 16; ++i) {
+        for(i = 0; i < 17; ++i) {
             if(strcmp(command[i], commandbuf[0]) == 0) {
                 rst = i;
                 break;
@@ -365,6 +370,22 @@ void shell() {
                     break;
                 }
                 command_tree(commandbuf[1]);
+                break;
+            }
+            case 16: {
+                if(command_num != 3) {
+                    printf("chmod：参数错误\n");
+                    break;
+                }
+                if(!check_path(commandbuf[2])) {
+                    printf("chmod: 失败： 路径有误\n", commandbuf[2]);
+                    break;
+                }
+                if(!check_chmodstr(commandbuf[1])) {
+                    printf("chmod: 失败： 权限格式有误\n", commandbuf[1]);
+                    break;
+                }
+                command_chmod(commandbuf[1], commandbuf[2]);
                 break;
             }
             default: {

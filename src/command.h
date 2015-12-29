@@ -59,7 +59,7 @@ char* get_mode_str(int id) {
     char str[16] = "drwxrwxrwx";
     if(!is_dir(id)) str[0] = '-';
     int i, mod = array_inode[id]->i_mode;
-    for(i = 0; i < 8; ++i) {
+    for(i = 0; i < 9; ++i) {
         if((mod & (1<<i)) != (1<<i)) {
             str[9-i] = '-';
         }
@@ -1133,6 +1133,42 @@ int command_tree(char* path) {
     strcpy(output_pathbuf, "");
     show_tree(id, 0);
     return 0;
+}
+
+int command_chmod(char* quanxian, char* path) {
+    int id = get_inode_from_path(path);
+    if(id < 0) {
+        printf("chmod: 错误: 路径不存在\n");
+        return -1;
+    }
+
+    if(!(curr_user == ROOTUID || array_inode[id]->i_uid == curr_user)) {
+        printf("chmod: 错误: 没有权限\n");
+        return -1;
+    }
+    if(is_important(id)) {
+        printf("chmod: 错误: 是重要文件\n");
+        return -1;
+    }
+    int a[3], i, j, k;
+    for(i = 0; i < 3; ++i) {
+        a[i] = quanxian[i] - '0';
+    }
+    for(i = 0; i < 3; ++i) {
+        for(j = 0; j < 3; ++j) {
+            k = (2 - i) * 3 + j;
+            //printf("k == %d\n", k);
+            if((a[i] & (1<<j)) == (1<<j)) {
+                //puts("a");
+                array_inode[id]->i_mode |= 1<<k;
+            } else {
+                //puts("b");
+                array_inode[id]->i_mode &= ~(1<<k);
+            }
+        }
+    }
+    return 1;
+
 }
 
 

@@ -440,4 +440,14 @@ void set_inode_large(int id) {
     array_inode[id]->i_mode |= ILARG;
 }
 
+bool check_chmodstr(char* chmodbuf) {
+    int len, i;
+    len = strlen(chmodbuf);
+    if(len != 3) return false;
+    for(i = 0; i < 3; ++i) {
+        if(!(chmodbuf[i] >= '0' && chmodbuf[i] <= '7')) return false;
+    }
+    return true;
+}
+
 #endif
