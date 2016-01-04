@@ -801,6 +801,10 @@ int command_cp(char* path1, char*path2, bool flag) {
         printf("cp: 错误: %s不存在\n", path1);
         return -1;
     }
+    if(p_filesys->s_fsize <= get_size(ppid)) {
+        printf("cp: 错误: 没有足够空间");
+        return -1;
+    }
     //如果path1是文件的话，去掉-r的选项。
     if(!is_dir(ppid)) {
         flag = false;

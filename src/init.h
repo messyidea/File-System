@@ -126,8 +126,10 @@ void init_filesystem() {
     if(fp < 0) {
         fp = open("disk", O_RDWR|O_CREAT, 0777);
         p_filesys = (struct filsys*)filesystem;
+        //只记未使用的inode
         p_filesys->s_isize = 512;
-        p_filesys->s_fsize = 3 + 64 + 1024;
+        //只记为使用的block
+        p_filesys->s_fsize = 1024;
         p_filesys->s_nfree = 99;
         p_filesys->s_ninode = 99;
         // init stack

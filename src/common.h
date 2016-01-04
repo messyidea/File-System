@@ -10,10 +10,12 @@
 
 // 设置inodeid为已使用
 inline void set_inode_used(int id) {
+    p_filesys->s_isize --;
     array_inode[id]->i_mode |= IALLOC;
 }
 // 设置inodeid为未使用
 inline void set_inode_unused(int id) {
+    p_filesys->s_isize ++;
     array_inode[id]->i_mode = 0;
 }
 // inodeid是否已使用
@@ -48,6 +50,7 @@ void set_block_used(int id) {
     i = id / 32;
     j = id - i * 32;
     p_used_block->u[i] |= 1 << j;
+    p_filesys->s_fsize --;
 }
 // 设置block为未使用
 void set_block_unused(int id) {
@@ -55,6 +58,7 @@ void set_block_unused(int id) {
     i = id / 32;
     j = id - i * 32;
     p_used_block->u[i] &= ~(1 << j);
+    p_filesys->s_fsize ++;
 }
 // 判断block是否已使用
 bool is_block_used(int id) {
