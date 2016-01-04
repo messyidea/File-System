@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <time.h>
 
 // 设置inodeid为已使用
 inline void set_inode_used(int id) {
@@ -35,6 +36,10 @@ int ialloc() {
 
     //alloc
     set_inode_used(p_filesys->s_inode[p_filesys->s_ninode--]);
+    //init time
+    //time(&array_inode[p_filesys->s_inode[p_filesys->s_ninode + 1]]->i_createtime);
+    time(&array_inode[p_filesys->s_inode[p_filesys->s_ninode + 1]]->i_changetime);
+
     return p_filesys->s_inode[p_filesys->s_ninode + 1];
 }
 // 设置block为使用
@@ -370,6 +375,7 @@ bool have_authority(int uid, int iid, char w) {
     }
     int mode;
     mode = array_inode[iid]->i_mode;
+
     switch(w) {
         case 'w':
             if(array_inode[iid]->i_uid != uid) {

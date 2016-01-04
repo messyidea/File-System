@@ -1,5 +1,6 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
+#include <time.h>
 
 // 超级块
 struct filsys {
@@ -19,6 +20,8 @@ struct inode {
     int i_addr[8];
     int i_count;
     int i_pid;
+    //time_t i_createtime;
+    time_t i_changetime;
 };
 
 //dir is 32, a block = 16 dir

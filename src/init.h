@@ -8,6 +8,7 @@
 #include "structs.h"
 #include "common.h"
 #include "shell.h"
+#include <time.h>
 
 // 初始化数据
 void init_data() {
@@ -30,6 +31,8 @@ void create_root_dir() {
     int iid, bid;
     // must 0
     set_inode_used(root_inode);
+    time(&array_inode[root_inode]->i_changetime);
+    //time(&array_inode[root_inode]->i_createtime);
     array_inode[root_inode]->i_uid = ROOTUID;
     array_inode[root_inode]->i_gid = ROOTGID;
     array_inode[root_inode]->i_pid = root_inode;

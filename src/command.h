@@ -6,7 +6,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-
+#include <time.h>
 
 /*
 void command_ls(int id) {
@@ -67,6 +67,24 @@ char* get_mode_str(int id) {
     return str;
 }
 
+/*
+inline char* get_createtime(int id) {
+    char name[100];
+    strcpy(name, asctime(localtime(&array_inode[id]->i_createtime)));
+    name[strlen(name) - 1] = 0;
+    return name;
+    //return asctime(localtime(&array_inode[id]->i_createtime));
+}
+*/
+
+inline char* get_changetime(int id) {
+    char name[100];
+    strcpy(name, asctime(localtime(&array_inode[id]->i_changetime)));
+    name[strlen(name) - 1] = 0;
+    return name;
+    //return asctime(localtime(&array_inode[id]->i_changetime));
+}
+
 // ls命令，显示path中的文件和文件夹
 void command_ls(char *path) {
     int id = get_inode_from_path(path);
@@ -75,7 +93,7 @@ void command_ls(char *path) {
         return ;
     }
     if(!is_dir(id)) {
-        printf("%-20s%-10d%-15s%-15s%-15s\n", get_mode_str(id), id, get_name_by_uid(array_inode[id]->i_uid), get_name_by_gid(array_inode[id]->i_gid), path);
+        printf("%-20s%-10d%-15s%-15s%-30s%-15s\n", get_mode_str(id), id, get_name_by_uid(array_inode[id]->i_uid), get_name_by_gid(array_inode[id]->i_gid), get_changetime(id), path);
         return ;
     }
     int i, j, tmpid;
@@ -89,7 +107,7 @@ void command_ls(char *path) {
         get_single_block(tmpid);
         for(j = 0;j < 16; ++j) {
             p_dir = (struct dir*)(single_block + j * (sizeof(struct dir)));
-            printf("%-20s%-10d%-15s%-15s%-15s\n", get_mode_str(p_dir->inode), p_dir->inode, get_name_by_uid(array_inode[p_dir->inode]->i_uid), get_name_by_gid(array_inode[p_dir->inode]->i_gid), p_dir->name);
+            printf("%-20s%-10d%-15s%-15s%-30s%-15s\n", get_mode_str(p_dir->inode), p_dir->inode, get_name_by_uid(array_inode[p_dir->inode]->i_uid), get_name_by_gid(array_inode[p_dir->inode]->i_gid), get_changetime(p_dir->inode), p_dir->name);
         }
     }
     i = num - 1;
@@ -97,7 +115,9 @@ void command_ls(char *path) {
     get_single_block(tmpid);
     for(j = 0;j < lastnum; ++j) {
         p_dir = (struct dir*)(single_block + j * (sizeof(struct dir)));
-        printf("%-20s%-10d%-15s%-15s%-15s\n", get_mode_str(p_dir->inode), p_dir->inode, get_name_by_uid(array_inode[p_dir->inode]->i_uid), get_name_by_gid(array_inode[p_dir->inode]->i_gid), p_dir->name);
+        printf("%-20s%-10d%-15s%-15s%-30s%-15s\n", get_mode_str(p_dir->inode), p_dir->inode, get_name_by_uid(array_inode[p_dir->inode]->i_uid), get_name_by_gid(array_inode[p_dir->inode]->i_gid), get_changetime(p_dir->inode), p_dir->name);
+
+        //printf("%-20s%-10d%-15s%-15s%-15s\n", get_mode_str(p_dir->inode), p_dir->inode, get_name_by_uid(array_inode[p_dir->inode]->i_uid), get_name_by_gid(array_inode[p_dir->inode]->i_gid), p_dir->name);
     }
     return "";
 }
@@ -907,6 +927,8 @@ void do_write(int pid, char *name) {
 
 // 添加内容到id，内容由用户输入
 void do_appand(int id) {
+    //time
+    time(&array_inode[id]->i_changetime);
     int siz = array_inode[id]->i_size;
     int i, j, ii, jj;
     strcpy(filesbuf, "");
@@ -1125,7 +1147,7 @@ int command_tree(char* path) {
         printf("tree: 错误: 路径不存在\n");
         return -1;
     }
-    if(!have_authority(curr_user, id, "r")) {
+    if(!have_authority(curr_user, id, 'r')) {
         printf("tree: 错误: 没有读权限\n");
         return -1;
     }
