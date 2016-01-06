@@ -149,7 +149,30 @@ void shell() {
                     break;
                 }
                 default: {
+
                     puts("unknow command");
+                    puts("You can use commands as follows");
+                    puts("------------------------------------------------------");
+                    puts("mkdir:          创建文件夹");
+                    puts("rmdir:          删除空文件夹");
+                    puts("mv:             移动文件，加上-r可移动文件夹");
+                    puts("ls:             列出文件");
+                    puts("touch:          创建空文件");
+                    puts("rm:             删除文件，加上-r可删除文件夹");
+                    puts("cp:             复制文件，加上-r可复制文件夹");
+                    puts("cat:            读取文件并显示");
+                    puts("write:          从文件中写入");
+                    puts("cd:             切换目录");
+                    puts("useradd:        添加用户");
+                    puts("userdel:        删除用户");
+                    puts("su:             切换用户");
+                    puts("passwd:         修改用户密码");
+                    puts("du:             显示文件大小");
+                    puts("tree:           显示文件树");
+                    puts("chmod:          改变文件读写权限");
+                    puts("exit:           退出");
+                    puts("------------------------------------------------------");
+                    puts("ps:  各命令后加上?可以查看各命令用法");
                     break;
                 }
             }
@@ -403,6 +426,28 @@ void shell() {
             }
             default: {
                 puts("unknow command");
+                puts("You can use commands as follows");
+                puts("------------------------------------------------------");
+                puts("mkdir:          创建文件夹");
+                puts("rmdir:          删除空文件夹");
+                puts("mv:             移动文件，加上-r可移动文件夹");
+                puts("ls:             列出文件");
+                puts("touch:          创建空文件");
+                puts("rm:             删除文件，加上-r可删除文件夹");
+                puts("cp:             复制文件，加上-r可复制文件夹");
+                puts("cat:            读取文件并显示");
+                puts("write:          从文件中写入");
+                puts("cd:             切换目录");
+                puts("useradd:        添加用户");
+                puts("userdel:        删除用户");
+                puts("su:             切换用户");
+                puts("passwd:         修改用户密码");
+                puts("du:             显示文件大小");
+                puts("tree:           显示文件树");
+                puts("chmod:          改变文件读写权限");
+                puts("exit:           退出");
+                puts("------------------------------------------------------");
+                puts("ps:  各命令后加上?可以查看各命令用法");
                 break;
             }
 
