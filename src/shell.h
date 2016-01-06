@@ -38,7 +38,7 @@ void shell() {
     printf("start shell\n");
     int i, j;
     bool flag;
-    char command[17][100];
+    char command[18][100];
     strcpy(command[0], "exit");
     strcpy(command[1], "mkdir");
     strcpy(command[2], "rmdir");
@@ -56,6 +56,7 @@ void shell() {
     strcpy(command[14], "du");
     strcpy(command[15], "tree");
     strcpy(command[16], "chmod");
+    strcpy(command[17], "userdel");
     int rst;
     inputbuf = (char*)malloc(1024*256);
     filesbuf = (char*)malloc(1024*256);
@@ -68,7 +69,7 @@ void shell() {
             commandbuf[0][strlen(commandbuf[0]) - 1] = 0;
             puts("show help");
             rst = -1;
-            for(i = 0; i < 17; ++i) {
+            for(i = 0; i < 18; ++i) {
                 if(strcmp(command[i], commandbuf[0]) == 0) {
                     rst = i;
                     break;
@@ -143,6 +144,10 @@ void shell() {
                     puts("chmod： 改变文件权限： chmod 777 path");
                     break;
                 }
+                case 17: {
+                    puts("userdel： 删除用户： userdel user");
+                    break;
+                }
                 default: {
                     puts("unknow command");
                     break;
@@ -151,7 +156,7 @@ void shell() {
             continue;
         }
         rst = -1;
-        for(i = 0; i < 17; ++i) {
+        for(i = 0; i < 18; ++i) {
             if(strcmp(command[i], commandbuf[0]) == 0) {
                 rst = i;
                 break;
@@ -386,6 +391,14 @@ void shell() {
                     break;
                 }
                 command_chmod(commandbuf[1], commandbuf[2]);
+                break;
+            }
+            case 17: {
+                if(command_num != 2) {
+                    printf("userdel：参数错误\n");
+                    break;
+                }
+                command_userdel(commandbuf[1]);
                 break;
             }
             default: {

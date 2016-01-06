@@ -586,16 +586,17 @@ void remove_file_itself(int id) {
 // 递归删除id对应目录中的文件和文件夹
 void dfs_rm(int id) {
     int i, j, k;
-    int num, lastnum, bid;
+    int num, lastnum, bid, cou;
     if(!is_dir(id)) {
         remove_file_itself(id);
         return;
     } else {
         num = array_inode[id]->i_count;
         lastnum = num - (num-1) / 16 * 16;
+        cou = array_inode[id]->i_size;
         bid = array_inode[id]->i_addr[0];
         get_single_block(bid);
-        if(num == 1) {
+        if(cou == 1) {
             for(i = 2; i < lastnum; ++i) {
                 get_single_block(bid);
                 p_dir = (struct dir*)(single_block + i * (sizeof(struct dir)));
@@ -608,7 +609,7 @@ void dfs_rm(int id) {
                 p_dir = (struct dir*)(single_block + i * (sizeof(struct dir)));
                 dfs_rm(p_dir->inode);
             }
-            for(i = 1; i < num - 1; ++i) {
+            for(i = 1; i < cou - 1; ++i) {
                 bid = array_inode[id]->i_addr[i];
                 get_single_block(bid);
                 for(j = 0; j < 16 ; ++j) {
@@ -617,7 +618,7 @@ void dfs_rm(int id) {
                     dfs_rm(p_dir->inode);
                 }
             }
-            i = num - 1;
+            i = cou - 1;
             bid = array_inode[id]->i_addr[i];
             get_single_block(bid);
             for(i = 0; i < lastnum; ++i) {
@@ -648,7 +649,7 @@ int command_rm(char* path, bool flag) {
             printf("rm: 错误: file is important\n");
             return -1;
         }
-        if(is_dir(iid)) {
+        if(!is_dir(iid)) {
             remove_dir_use_inode(array_inode[iid]->i_pid, iid);
             remove_file_itself(iid);
         } else {
@@ -1195,6 +1196,62 @@ int command_chmod(char* quanxian, char* path) {
     }
     return 1;
 
+}
+
+void do_userdel(int uid) {
+    int i, j, pos = -1;
+    for(i = 0; i < *user_num; ++i) {
+        if(array_user[i]->uid == uid) {
+            pos = i;
+            break;
+        }
+    }
+    if(pos == -1) {
+        //unknow error
+        return ;
+    }
+
+    array_user[pos]->uid = array_user[(*user_num) - 1]->uid;
+    strcpy(array_user[pos]->passwd, array_user[(*user_num) - 1]->passwd);
+    strcpy(array_user[pos]->name, array_user[(*user_num) - 1]->name);
+
+    array_group[pos]->gid = array_group[(*group_num) - 1]->gid;
+    strcpy(array_group[pos]->name, array_group[(*group_num) - 1]->name);
+
+    array_user_group[pos]->uid = array_user_group[(*user_group_num) - 1]->uid;
+    array_user_group[pos]->gid = array_user_group[(*user_group_num) - 1]->gid;
+
+    (*user_num) --;
+    (*group_num) --;
+    (*user_group_num) --;
+}
+
+int command_userdel(char* user) {
+    if(curr_user != 0) {
+        puts("userdel: 错误: 你不是root,没有权限");
+        return -1;
+    }
+    int uid = get_password(user);
+    if(uid < 0) {
+        printf("userdel: 错误： 不存在用户%s\n",user);
+        return -1;
+    }
+    if(uid == 0) {
+        printf("userdel: 错误： 不能删除root\n");
+        return -1;
+    }
+    char path[100];
+    strcpy(path, "/home/");
+    strcat(path, user);
+    //printf("path = %s\n", path);
+    int pathid = get_inode_from_path(path);
+    //printf("pathid = %d\n", pathid);
+    dfs_rm(pathid);
+    remove_dir_use_inode(array_inode[pathid]->i_pid, pathid);
+    //puts("finish dfs_rm");
+    //command_rm(path, true);
+    do_userdel(uid);
+    curr_inode = root_inode;
 }
 
 
