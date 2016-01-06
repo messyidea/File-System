@@ -1081,6 +1081,7 @@ int get_size(int id) {
         get_single_block(bid);
         k = (i == cou-1? lastnum:16);
         for(j = 0; j < k; ++j) {
+            get_single_block(bid);
             p_dir = (struct dir*)(single_block + j * (sizeof(struct dir)));
             if(strcmp(p_dir->name, ".") == 0 || strcmp(p_dir->name, "..") == 0) continue;
             tid = p_dir->inode;
@@ -1096,6 +1097,7 @@ int command_du(char* path) {
         printf("du: 错误: 路径不存在\n");
         return -1;
     }
+    //printf("%d\n",id);
     printf("%dkb          %s\n", get_size(id), path);
     return 0;
 }
