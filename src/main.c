@@ -26,24 +26,12 @@ void call_for_exit() {
 
 int main()
 {
-    /*
-    printf("Hello world!\n");
-    printf("sizeof int = %d\n", sizeof(int));
-    printf("sizeof filsys = %d\n", sizeof(struct filsys));
-    printf("sizeof inode = %d \n", sizeof(struct inode));
-    //filesystem = (char *) malloc (512 * (3 + 64 + 1024));
-    //printf("sizeof filesystem = %d", sizeof(filesystem));
 
-    printf("size =  %d\n", sizeof(struct inode));
-    printf("size int = %d\n", sizeof(int));
-    printf("size char = %d\n", sizeof(char));
-    printf("sizeof ctime = %d\n", sizeof(time_t));
-    */
 
     signal(SIGINT,call_for_exit);
     signal(SIGQUIT,call_for_exit);
-	signal(SIGKILL,call_for_exit);
-	signal(SIGTERM,call_for_exit);
+    signal(SIGKILL,call_for_exit);
+    signal(SIGTERM,call_for_exit);
 
     init();
     //debug_show_dir(0);

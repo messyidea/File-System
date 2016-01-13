@@ -24,7 +24,7 @@ struct inode {
     time_t i_changetime;
 };
 
-//dir is 32, a block = 16 dir
+
 struct dir {
     int inode;
     char name[14];
